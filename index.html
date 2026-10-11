@@ -370,6 +370,13 @@ header {
 .build-btn:hover { background: rgba(212,144,90,0.1); border-color: var(--amber); }
 .build-btn.primary { background: rgba(212,144,90,0.15); border-color: var(--amber); }
 
+/* ── ACCOUNT / USAGE ──────────────────────────────────────── */
+.meter { height: 6px; background: rgba(212,144,90,0.15); margin: 8px 0 4px; }
+.meter > i { display: block; height: 100%; background: var(--amber); width: 0; transition: width 0.4s ease; }
+.acct-note { font-size: 10px; color: var(--text3); letter-spacing: 1px; line-height: 1.6; }
+.acct-row { display: flex; align-items: center; gap: 10px; }
+.acct-row input { accent-color: var(--amber); width: 18px; height: 18px; }
+
 /* ── PREVIEW SLIDE PANEL ──────────────────────────────────── */
 .pv-backdrop {
   position: fixed; inset: 0; z-index: 500;
@@ -547,6 +554,7 @@ header {
     <div class="menu-label">Mission</div>
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
     <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
+    <div class="menu-item" onclick="openAccounts();closeMenu()"><span class="mi-icon">◉</span> My accounts</div>
   </div>
   <div class="menu-section">
     <div class="menu-label">Templates</div>
@@ -557,6 +565,7 @@ header {
     <div class="menu-item" onclick="quickPrompt('Build me a quote calculator page for: ');closeMenu()"><span class="mi-icon">◻</span> Quote calculator</div>
     <div class="menu-item" onclick="quickPrompt('Build me a one-page resume website for: ');closeMenu()"><span class="mi-icon">◻</span> Resume</div>
   </div>
+  <div class="menu-section" id="acctMenu" style="display:none;"></div>
   <div class="menu-divider"></div>
   <div class="menu-section">
     <div class="menu-label">Legal</div>
@@ -658,6 +667,17 @@ header {
     <div class="page-section"><h3>Usage</h3><ul><li>Must be 18 or older</li><li>No illegal use</li><li>Do not rely on AI for professional advice</li><li>Don't attempt to abuse or manipulate the AI</li></ul></div>
     <div class="page-section"><h3>Billing</h3><p>Paid plans billed monthly or annually. Cancel anytime. 7-day refund window.</p></div>
     <div class="page-section"><h3>Intellectual Property</h3><p>OwnSite and all related branding are owned by us. AI-generated content belongs to you.</p></div>
+  </div>
+</div>
+
+<div class="page" id="page-accounts">
+  <div class="page-head"><button class="page-back" onclick="closePage('accounts')">← BACK</button><div class="page-title">MY ACCOUNTS</div></div>
+  <div class="page-body">
+    <div class="page-section">
+      <h3>One email for everything</h3>
+      <p class="acct-note" style="margin-bottom:16px;">Use the same email address for every account below so you can always recover them. Use a password manager. OwnSite never asks for or stores your passwords or keys. Tick each one when it's set up (saved on this device only).</p>
+      <div id="acctList" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
   </div>
 </div>
 
@@ -1044,11 +1064,117 @@ function newSession() {
   autoResize(document.getElementById('chatInput'));
 }
 
+// ── ACCOUNT, SIGN-IN, USAGE ───────────────────────────────────
+// Sign-in and the usage meter turn on when OS.anonKey is filled in.
+const OS = {
+  url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
+  anonKey: '',                                   // paste the nwlhs anon (public) key to enable
+  siteUrl: 'https://rental-application.pages.dev/',  // exact redirect domain (never window.location.origin)
+  checkoutUrl: ''                                // endpoint returning { url } for Stripe checkout; empty hides Upgrade
+};
+let osClient = null, osUser = null, osUsage = null;
+const osEnabled = () => !!OS.anonKey;
+
+function fmtTok(n) { return n >= 1000 ? (Math.round(n / 100) / 10) + 'k' : String(n); }
+
+function renderAcct() {
+  const box = document.getElementById('acctMenu');
+  if (!box || !osEnabled()) return;
+  box.style.display = '';
+  if (!osUser) {
+    box.innerHTML = '<div class="menu-label">Account</div><div class="menu-item" onclick="osSignIn()"><span class="mi-icon">⟫</span> Sign in with Google</div>';
+    return;
+  }
+  const u = osUsage;
+  const pct = u ? Math.min(100, Math.round(u.used / u.limit * 100)) : 0;
+  box.innerHTML = '<div class="menu-label">Account</div>' +
+    '<div class="acct-note" style="padding:0 20px;">' + escapeHtml(osUser.email || '') + '</div>' +
+    '<div style="padding:0 20px;">' +
+      (u ? '<div class="meter"><i style="width:' + pct + '%"></i></div><div class="acct-note">' + u.plan.toUpperCase() + ' · ' + fmtTok(u.used) + ' / ' + fmtTok(u.limit) + ' TOKENS THIS MONTH</div>'
+         : '<div class="acct-note">Usage shows after your first message.</div>') +
+    '</div>' +
+    (OS.checkoutUrl && (!u || u.plan !== 'pro') ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade</div>' : '') +
+    '<div class="menu-item" onclick="osSignOut()"><span class="mi-icon">✕</span> Sign out</div>';
+}
+
+function osInit() {
+  if (!osEnabled()) return;
+  const sc = document.createElement('script');
+  sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+  sc.onload = () => {
+    osClient = window.supabase.createClient(OS.url, OS.anonKey, {
+      auth: { persistSession: true, detectSessionInUrl: true, storageKey: 'ownsite-auth' }
+    });
+    osClient.auth.getSession().then(({ data }) => { osUser = data.session ? data.session.user : null; renderAcct(); });
+    // Defer follow-up work out of the callback to avoid auth deadlocks.
+    osClient.auth.onAuthStateChange((_e, session) => {
+      setTimeout(() => { osUser = session ? session.user : null; renderAcct(); }, 0);
+    });
+  };
+  sc.onerror = () => console.log('Sign-in library failed to load');
+  document.head.appendChild(sc);
+}
+function osSignIn() {
+  if (!osClient) return;
+  osClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: OS.siteUrl } });
+}
+function osSignOut() { if (osClient) osClient.auth.signOut(); closeMenu(); }
+async function osToken() {
+  if (!osClient) return null;
+  const { data } = await osClient.auth.getSession();
+  return data.session ? data.session.access_token : null;
+}
+async function osUpgrade() {
+  const tok = await osToken();
+  if (!tok || !OS.checkoutUrl) return;
+  try {
+    const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: OS.anonKey } });
+    const d = await r.json();
+    if (d.url) window.location.href = d.url;
+  } catch (e) { console.log('checkout failed'); }
+}
+
+// ── MY ACCOUNTS (checklist, saved on this device only) ────────
+const ACCT_SERVICES = [
+  { id: 'github', name: 'GitHub', why: 'Stores your code so you always own a copy.', url: 'https://github.com' },
+  { id: 'cloudflare', name: 'Cloudflare', why: 'Free hosting and your domain.', url: 'https://dash.cloudflare.com' },
+  { id: 'supabase', name: 'Supabase', why: 'A database and sign-in you control.', url: 'https://supabase.com/dashboard' },
+  { id: 'console', name: 'Anthropic Console', why: 'API keys, if you add AI to your own app.', url: 'https://console.anthropic.com' },
+  { id: 'claude', name: 'Claude', why: 'Chat with Claude directly.', url: 'https://claude.ai' }
+];
+function loadAcctTicks() { try { return JSON.parse(localStorage.getItem('ownsite_accts') || '{}'); } catch (e) { return {}; } }
+function openAccounts() {
+  const ticks = loadAcctTicks();
+  const box = document.getElementById('acctList');
+  box.innerHTML = '';
+  ACCT_SERVICES.forEach(sv => {
+    const row = document.createElement('div');
+    row.className = 'section-item acct-row';
+    row.style.cssText = 'padding:14px 16px;border-color:rgba(212,144,90,0.2);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = !!ticks[sv.id];
+    cb.onchange = () => { const t = loadAcctTicks(); t[sv.id] = cb.checked; try { localStorage.setItem('ownsite_accts', JSON.stringify(t)); } catch (e) {} };
+    const txt = document.createElement('div');
+    txt.style.cssText = 'flex:1;';
+    txt.innerHTML = '<div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">' + sv.name.toUpperCase() + '</div><div class="acct-note">' + sv.why + '</div>';
+    const go = document.createElement('a');
+    go.className = 'build-btn'; go.textContent = 'OPEN'; go.href = sv.url; go.target = '_blank'; go.rel = 'noopener';
+    go.style.textDecoration = 'none';
+    row.appendChild(cb); row.appendChild(txt); row.appendChild(go);
+    box.appendChild(row);
+  });
+  openPage('accounts');
+}
+
 // ── SEND ──────────────────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text || isThinking) return;
+  if (osEnabled() && !osUser) {
+    addMsg('ai', '> Sign in to start building. Open the menu, then Account, then Sign in with Google.');
+    return;
+  }
   input.value = ''; autoResize(input);
   addMsg('user', text);
   isThinking = true;
@@ -1056,12 +1182,20 @@ async function sendMessage() {
   showTyping(text);
 
   try {
-    const res = await fetch('https://dmemzljerldzeiwqfxzp.supabase.co/functions/v1/fluentra-chat', {
+    const hdrs = { 'Content-Type': 'application/json' };
+    let endpoint = 'https://dmemzljerldzeiwqfxzp.supabase.co/functions/v1/fluentra-chat';
+    if (osEnabled()) {
+      endpoint = OS.url + '/functions/v1/ownsite-chat';
+      hdrs.Authorization = 'Bearer ' + (await osToken());
+      hdrs.apikey = OS.anonKey;
+    }
+    const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: hdrs,
       body: JSON.stringify({ system: SYSTEM, userMessage: text })
     });
     const data = await res.json();
+    if (data.usage) { osUsage = data.usage; renderAcct(); }
     removeTyping();
     stopDeepHum();
     if (data.text) {
@@ -1071,6 +1205,8 @@ async function sendMessage() {
       if (/<!doctype|<html/i.test(reply)) {
         offerDownload(reply);
       }
+    } else if (data.code === 'limit') {
+      addMsg('ai', '> ' + data.error + (OS.checkoutUrl ? ' Open the menu and choose Upgrade for more.' : ' It resets next month.'));
     } else {
       addMsg('ai', '> Signal lost. ' + (data.error || 'Retry transmission.'));
     }
@@ -1165,6 +1301,8 @@ function closePreview() {
     if (!panel.classList.contains('open')) document.getElementById('pvFrame').srcdoc = '';
   }, 400);
 }
+
+osInit();
 
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────
 let audioCtx = null;
