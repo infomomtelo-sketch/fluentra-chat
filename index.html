@@ -191,8 +191,7 @@ body::before {
 /* Welcome fade in from ocean */
 .welcome {
   animation: none !important;
-  opacity: 0;
-  transition: opacity 1.5s ease;
+  opacity: 1;
 }
 
 /* ── HEADER ───────────────────────────────────────────────── */
@@ -529,40 +528,6 @@ header {
 <div class="red-dot"></div>
 <div class="stars" id="stars"></div>
 
-<!-- CINEMATIC INTRO -->
-<div id="introScreen">
-  <!-- Pure ocean during intro -->
-  
-  <!-- Phase 1: Boot terminal -->
-  <div id="bootPhase">
-    <div class="boot-text">
-      <div class="boot-line">FLUENTRA OS v1.0 ......................... LOADING</div>
-      <div class="boot-line">CLAUDE SONNET 4.6 ........................ OK</div>
-      <div class="boot-line">NEURAL DEPTH ............................ INFINITE</div>
-      <div class="boot-line">OCEAN INTERFACE ......................... INITIALIZED</div>
-      <div class="boot-line">BUILD ENGINE ............................ ARMED</div>
-      <div class="boot-line">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-      <div class="boot-line">SYSTEM READY.</div>
-    </div>
-  </div>
-
-  <!-- Phase 2: The words -->
-  <div id="wordsPhase">
-    <div id="wordTitle">
-      <div id="wordLine1" class="word-line">Still waters.</div>
-      <div id="wordLine2" class="word-line italic-line">Infinite depth.</div>
-    </div>
-  </div>
-
-  <!-- Phase 3: Particle canvas for dissolve -->
-  <canvas id="dissolveCanvas"></canvas>
-
-  <!-- Phase 4: Pure ocean — just sky, water, red dot -->
-  <div id="pureOcean">
-    <div id="pureRedDot"></div>
-  </div>
-</div>
-
 <!-- MENU OVERLAY -->
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
@@ -575,16 +540,16 @@ header {
   <div class="menu-section">
     <div class="menu-label">Mission</div>
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
-    <div class="menu-item" onclick="openPage('builds');closeMenu()"><span class="mi-icon">◈</span> Featured builds</div>
+    <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
   </div>
   <div class="menu-section">
-    <div class="menu-label">Capabilities</div>
-    <div class="menu-item" onclick="quickPrompt('Build me a landing page for my business');closeMenu()"><span class="mi-icon">◻</span> Build a website</div>
-    <div class="menu-item" onclick="quickPrompt('I need legal advice about');closeMenu()"><span class="mi-icon">◻</span> Legal guidance</div>
-    <div class="menu-item" onclick="quickPrompt('Help me start a business');closeMenu()"><span class="mi-icon">◻</span> Business formation</div>
-    <div class="menu-item" onclick="quickPrompt('Find me a domain name for');closeMenu()"><span class="mi-icon">◻</span> Domain finder</div>
-    <div class="menu-item" onclick="quickPrompt('Write me a demand letter for');closeMenu()"><span class="mi-icon">◻</span> Legal documents</div>
-    <div class="menu-item" onclick="quickPrompt('Help me with my taxes');closeMenu()"><span class="mi-icon">◻</span> Tax guidance</div>
+    <div class="menu-label">Templates</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a landing page for my business: ');closeMenu()"><span class="mi-icon">◻</span> Landing page</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a fillable invoice I can print or save as PDF for my business: ');closeMenu()"><span class="mi-icon">◻</span> Invoice</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a fillable agreement with a signature box and a disclaimer for: ');closeMenu()"><span class="mi-icon">◻</span> Agreement</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a link-in-bio page for: ');closeMenu()"><span class="mi-icon">◻</span> Link-in-bio</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a quote calculator page for: ');closeMenu()"><span class="mi-icon">◻</span> Quote calculator</div>
+    <div class="menu-item" onclick="quickPrompt('Build me a one-page resume website for: ');closeMenu()"><span class="mi-icon">◻</span> Resume</div>
   </div>
   <div class="menu-divider"></div>
   <div class="menu-section">
@@ -595,7 +560,7 @@ header {
   </div>
   <div class="menu-footer">
     FLUENTRA v1.0<br>
-    Powered by Claude Sonnet 4.6<br>
+    Powered by Claude Sonnet 5.5<br>
     Still waters. Infinite depth.
   </div>
 </nav>
@@ -616,7 +581,7 @@ header {
     <div class="header-right">
       <div class="status-line">
         <div class="status-ok"></div>
-        <span>SONNET 4.6</span>
+        <span>SONNET 5.5</span>
       </div>
       <button class="hdr-btn" onclick="cycleTheme()" id="themeBtn" style="font-size:14px;letter-spacing:0;padding:5px 8px;" title="Change ocean theme">🌙</button>
       <span id="themeLbl" style="font-size:9px;color:var(--text3);letter-spacing:2px;">NIGHT</span>
@@ -627,7 +592,7 @@ header {
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
       <div class="welcome-title">Still <span>waters</span>.<br>Infinite depth.</div>
-      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 4.6</div>
+      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 5.5</div>
       <div class="prompt-line">
         <span style="color:var(--amber);">></span>
         <span>What do you want to build today?</span>
@@ -636,7 +601,7 @@ header {
       <div class="starters">
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Build a landing page for my SaaS</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Help me form an LLC in my state</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Find domain names for my brand</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Build me a fillable invoice for my business</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Write a demand letter for money owed</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Help me file taxes as self-employed</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Build a full website with auth + payments</button>
@@ -689,48 +654,12 @@ header {
   </div>
 </div>
 
-<div class="page" id="page-builds">
-  <div class="page-head"><button class="page-back" onclick="closePage('builds')">← BACK</button><div class="page-title">FEATURED BUILDS</div></div>
+<div class="page" id="page-mybuilds">
+  <div class="page-head"><button class="page-back" onclick="closePage('mybuilds')">← BACK</button><div class="page-title">MY BUILDS</div></div>
   <div class="page-body">
     <div class="page-section">
-      <h3>Built with Fluentra</h3>
-      <p style="color:var(--text3);font-size:11px;letter-spacing:1px;margin-bottom:20px;">REAL PRODUCTS · REAL PEOPLE · DIGITALLY INSANE</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <a href="https://thejudgy.com" target="_blank" style="text-decoration:none;">
-          <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.2);">
-            <span style="font-size:18px;">⚖️</span>
-            <div>
-              <div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">THEJUDGY.COM</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">AI advice court · Judgy + Barry · Brutally honest</div>
-            </div>
-          </div>
-        </a>
-        <a href="https://dropvault.live" target="_blank" style="text-decoration:none;">
-          <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.2);">
-            <span style="font-size:18px;">🛒</span>
-            <div>
-              <div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">DROPVAULT.LIVE</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Digital product store · Sell anything · Instant delivery</div>
-            </div>
-          </div>
-        </a>
-        <a href="https://ecrenta.space" target="_blank" style="text-decoration:none;">
-          <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.2);">
-            <span style="font-size:18px;">🏠</span>
-            <div>
-              <div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">ECRENTA.SPACE</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Rental platform · List · Find · Connect</div>
-            </div>
-          </div>
-        </a>
-        <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.1);opacity:0.5;">
-          <span style="font-size:18px;">⟫</span>
-          <div>
-            <div style="font-size:12px;color:var(--text3);letter-spacing:1px;">YOUR BUILD HERE</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px;">Built with Fluentra · Join the digitally insane</div>
-          </div>
-        </div>
-      </div>
+      <p style="color:var(--text3);font-size:11px;letter-spacing:1px;margin-bottom:20px;">SAVED IN THIS BROWSER ONLY · LAST 20 COMPLETE BUILDS</p>
+      <div id="myBuildsList" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
   </div>
 </div>
@@ -858,6 +787,50 @@ function closeMenu() {
 }
 
 // ── PAGES ─────────────────────────────────────────────────────
+// ── MY BUILDS (saved in this browser) ─────────────────────────
+const BUILDS_KEY = 'fluentra_builds';
+function loadBuilds() {
+  try { return JSON.parse(localStorage.getItem(BUILDS_KEY) || '[]'); } catch (e) { return []; }
+}
+function saveBuilds(list) {
+  try { localStorage.setItem(BUILDS_KEY, JSON.stringify(list)); return true; } catch (e) { return false; }
+}
+function saveBuild(content) {
+  const html = extractHtml(content);
+  const t = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = (t && t[1].trim().slice(0, 60)) || 'Untitled build';
+  const list = loadBuilds();
+  list.unshift({ id: Date.now(), title, html });
+  while (list.length > 20) list.pop();
+  while (!saveBuilds(list) && list.length > 1) list.pop();
+}
+function openMyBuilds() {
+  const box = document.getElementById('myBuildsList');
+  const list = loadBuilds();
+  box.innerHTML = '';
+  if (!list.length) {
+    box.innerHTML = '<div class="section-item" style="padding:14px 16px;opacity:0.6;">No builds yet. Complete builds are saved here automatically.</div>';
+  }
+  list.forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'section-item';
+    row.style.cssText = 'padding:14px 16px;border-color:rgba(212,144,90,0.2);flex-direction:column;align-items:stretch;gap:10px;';
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:12px;color:var(--amber2);letter-spacing:1px;';
+    name.textContent = b.title + ' · ' + new Date(b.id).toLocaleDateString();
+    const acts = document.createElement('div');
+    acts.className = 'build-actions';
+    acts.style.marginTop = '0';
+    const mk = (label, fn) => { const x = document.createElement('button'); x.className = 'build-btn'; x.textContent = label; x.onclick = fn; acts.appendChild(x); };
+    mk('▶ PREVIEW', () => openPreview(b.html));
+    mk('⬇ HTML', () => downloadBuild(b.html));
+    mk('DELETE', () => { saveBuilds(loadBuilds().filter(x => x.id !== b.id)); openMyBuilds(); });
+    row.appendChild(name); row.appendChild(acts);
+    box.appendChild(row);
+  });
+  openPage('mybuilds');
+}
+
 function openPage(id) { document.getElementById('page-'+id).classList.add('open'); }
 function closePage(id) { document.getElementById('page-'+id).classList.remove('open'); }
 
@@ -1039,7 +1012,7 @@ function newSession() {
   document.getElementById('messages').innerHTML = `
     <div class="welcome" id="welcome">
       <div class="welcome-title">Still <span>waters</span>.<br>Infinite depth.</div>
-      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 4.6</div>
+      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 5.5</div>
       <div class="prompt-line">
         <span style="color:var(--amber);">></span>
         <span>What do you want to build today?</span>
@@ -1048,7 +1021,7 @@ function newSession() {
       <div class="starters">
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Build a landing page for my SaaS</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Help me form an LLC in my state</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Find domain names for my brand</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Build me a fillable invoice for my business</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Write a demand letter for money owed</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Help me file taxes as self-employed</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Build a full website with auth + payments</button>
@@ -1121,7 +1094,7 @@ function offerDownload(content) {
   div.querySelector('[data-act="download"]').addEventListener('click', () => downloadBuild(content));
   div.querySelector('[data-act="dismiss"]').addEventListener('click', () => div.querySelector('.build-output').remove());
 
-  if (complete) openPreview(content);
+  if (complete) { saveBuild(content); openPreview(content); }
 }
 
 function downloadBuild(content) {
@@ -1180,209 +1153,6 @@ function closePreview() {
     if (!panel.classList.contains('open')) document.getElementById('pvFrame').srcdoc = '';
   }, 400);
 }
-
-// ── CINEMATIC INTRO SEQUENCE ─────────────────────────────────
-(function() {
-  const intro    = document.getElementById('introScreen');
-  const boot     = document.getElementById('bootPhase');
-  const words    = document.getElementById('wordsPhase');
-  const line1    = document.getElementById('wordLine1');
-  const line2    = document.getElementById('wordLine2');
-  const canvas   = document.getElementById('dissolveCanvas');
-  const pure     = document.getElementById('pureOcean');
-  const pureDot  = document.getElementById('pureRedDot');
-  const welcome  = document.getElementById('welcome');
-  const ctx      = canvas.getContext('2d');
-
-  // Resize canvas
-  function resizeCanvas() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  // Particle system for text dissolve
-  let particles = [];
-  let animFrame;
-
-  function createParticlesFromText() {
-    // Draw text to canvas to sample pixels
-    canvas.style.opacity = '1';
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw the two lines of text
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const fs = Math.min(canvas.width * 0.09, 88);
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(232,220,200,0.9)';
-    ctx.font = `300 ${fs}px "Cormorant Garamond", serif`;
-    ctx.fillText('Still waters.', cx, cy - fs * 0.65);
-
-    ctx.fillStyle = 'rgba(232,168,112,0.9)';
-    ctx.font = `italic 300 ${fs}px "Cormorant Garamond", serif`;
-    ctx.fillText('Infinite depth.', cx, cy + fs * 0.65);
-
-    // Sample pixels and create particles
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    particles = [];
-
-    const step = 4; // sample every N pixels
-    for (let y = 0; y < canvas.height; y += step) {
-      for (let x = 0; x < canvas.width; x += step) {
-        const idx = (y * canvas.width + x) * 4;
-        const alpha = data[idx + 3];
-        if (alpha > 60) {
-          particles.push({
-            x: x, y: y,
-            ox: x, oy: y, // original position
-            r: data[idx],
-            g: data[idx+1],
-            b: data[idx+2],
-            a: alpha / 255,
-            // Velocity — mostly upward, slight horizontal drift
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: -(Math.random() * 2.5 + 0.5),
-            // Some become comets (fast + trail)
-            isComet: Math.random() < 0.08,
-            speed: Math.random() * 3 + 1,
-            size: Math.random() * 1.5 + 0.5,
-            life: 1,
-            decay: Math.random() * 0.008 + 0.004,
-            // Twinkle at end
-            twinkle: Math.random() < 0.3,
-          });
-        }
-      }
-    }
-  }
-
-  let dissolveStart = null;
-  function animateDissolve(ts) {
-    if (!dissolveStart) dissolveStart = ts;
-    const elapsed = ts - dissolveStart;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    let allDead = true;
-    for (const p of particles) {
-      if (p.life <= 0) continue;
-      allDead = false;
-
-      p.x  += p.vx;
-      p.y  += p.vy;
-      p.vx += (Math.random() - 0.5) * 0.1;
-      p.vy -= 0.01; // accelerate upward
-      p.life -= p.decay;
-
-      const alpha = Math.max(0, p.life) * p.a;
-
-      if (p.isComet) {
-        // Comet with trail
-        const gradient = ctx.createLinearGradient(
-          p.x, p.y, p.x - p.vx * 8, p.y - p.vy * 8
-        );
-        gradient.addColorStop(0, `rgba(${p.r},${p.g},${p.b},${alpha})`);
-        gradient.addColorStop(1, `rgba(${p.r},${p.g},${p.b},0)`);
-        ctx.beginPath();
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = p.size * 1.5;
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.vx * 10, p.y - p.vy * 10);
-        ctx.stroke();
-        // Bright head
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,220,160,${alpha})`;
-        ctx.fill();
-      } else {
-        // Regular particle → becomes a star
-        const twinkleA = p.twinkle
-          ? alpha * (0.5 + 0.5 * Math.sin(elapsed * 0.01 + p.ox))
-          : alpha;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${twinkleA})`;
-        ctx.fill();
-      }
-    }
-
-    if (!allDead) {
-      animFrame = requestAnimationFrame(animateDissolve);
-    } else {
-      // Dissolve complete — show pure ocean
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.style.opacity = '0';
-      pure.style.opacity   = '1';
-      pureDot.style.opacity = '1';
-
-      // Hold on pure ocean for 2 seconds then show UI
-      setTimeout(() => {
-        // Fade intro out
-        intro.style.transition = 'opacity 1.5s ease';
-        intro.style.opacity = '0';
-        // Fade welcome in + ping
-        if (welcome) {
-          welcome.style.opacity = '1';
-          setTimeout(() => playPing(), 500);
-        }
-        setTimeout(() => {
-          intro.style.display = 'none';
-          intro.style.pointerEvents = 'none';
-        }, 1600);
-      }, 2000);
-    }
-  }
-
-  // ── SEQUENCE TIMELINE ─────────────────────────────────────
-  // 0.0s — Boot terminal
-  // 2.5s — Boot fades, words appear
-  // 3.5s — Line 1 visible
-  // 4.2s — Line 2 visible
-  // 5.5s — Words dissolve into stars/comets
-  // 8.0s — Pure ocean moment
-  // 10.0s — UI appears from the deep
-
-  setTimeout(() => {
-    // Play typewriter for each boot line
-    document.querySelectorAll('.boot-line').forEach((line, i) => {
-      setTimeout(() => playTypewriterClick(), i * 300 + 100);
-    });
-
-    // Fade boot out
-    boot.style.opacity = '0';
-    setTimeout(() => { boot.style.display = 'none'; }, 800);
-
-    // Show words phase
-    words.style.opacity = '1';
-
-    // Line 1
-    setTimeout(() => {
-      line1.style.opacity = '1';
-      line1.style.transform = 'translateY(0)';
-    }, 200);
-
-    // Line 2
-    setTimeout(() => {
-      line2.style.opacity = '1';
-      line2.style.transform = 'translateY(0)';
-    }, 900);
-
-    // Start dissolve with sparkle sound
-    setTimeout(() => {
-      playSparkle();
-      words.style.opacity = '0';
-      createParticlesFromText();
-      requestAnimationFrame(animateDissolve);
-    }, 2800);
-
-  }, 2500);
-
-})();
 
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────
 let audioCtx = null;
