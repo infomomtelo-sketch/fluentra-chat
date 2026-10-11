@@ -1141,7 +1141,7 @@ async function osUpgrade() {
   const tok = await osToken();
   if (!tok || !OS.checkoutUrl) return;
   try {
-    const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: OS.anonKey } });
+    const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tok }) });
     const d = await r.json();
     if (d.url) window.location.href = d.url;
   } catch (e) { console.log('checkout failed'); }

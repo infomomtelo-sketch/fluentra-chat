@@ -11,7 +11,7 @@ const MAX_USER_CHARS = 8000;
 const KEEPALIVE_MS = 10000;
 
 // Monthly allowances (input + output tokens). Edit these to change plans.
-const LIMITS = { free: 30000, pro: 600000 } as const;
+const LIMITS = { free: 30000, pro: 500000 } as const;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
