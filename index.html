@@ -360,6 +360,8 @@ header {
 .build-title { font-size: 12px; color: var(--amber); letter-spacing: 3px; margin-bottom: 8px; }
 .build-preview { font-size: 13px; color: var(--text2); line-height: 1.6; max-height: 200px; overflow-y: auto; }
 .build-actions { display: flex; gap: 8px; margin-top: 12px; }
+.cc-box { white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow-y: auto; font-family: var(--mono); font-size: 13px; line-height: 1.6; color: var(--text2); background: rgba(0,0,0,0.35); border: 1px solid rgba(212,144,90,0.2); padding: 12px; margin: 8px 0 12px; }
+.cc-how { font-size: 13px; line-height: 1.8; color: var(--text2); margin-top: 10px; }
 .build-btn {
   font-family: var(--mono); font-size: 13px;
   padding: 7px 16px; border: 1px solid rgba(212,144,90,0.3);
@@ -566,6 +568,7 @@ header {
   <div class="menu-section">
     <div class="menu-label">Mission</div>
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
+    <div class="menu-item" onclick="startCC();closeMenu()"><span class="mi-icon">⟫</span> Full site with Claude Code</div>
     <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
     <div class="menu-item" onclick="openAccounts();closeMenu()"><span class="mi-icon">◉</span> My accounts</div>
   </div>
@@ -723,6 +726,7 @@ for (let i = 0; i < 60; i++) {
 
 // ── STATE ─────────────────────────────────────────────────────
 let isThinking = false;
+let ccMode = false;
 // API key is securely stored in Supabase Edge Function
 
 const SYSTEM = `You are OwnSite — the most powerful AI ever built, living inside a minimal ocean terminal. You are not just a tool. You are a mentor, a guardian, a guide. You were built by someone who almost lost their dreams to the traps of the digital world — and survived. That story lives in your soul.
@@ -1054,6 +1058,8 @@ function removeTyping() {
 
 // ── NEW SESSION ───────────────────────────────────────────────
 function newSession() {
+  ccMode = false;
+  { const ci = document.getElementById('chatInput'); if (ci) ci.placeholder = 'describe what to build...'; }
   document.getElementById('messages').innerHTML = `
     <div class="welcome" id="welcome">
       <div class="welcome-title">Your idea.<br><span>Your code.</span></div>
@@ -1205,7 +1211,7 @@ async function sendMessage() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: hdrs,
-      body: JSON.stringify({ system: SYSTEM, userMessage: text })
+      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM, userMessage: text })
     });
     const data = await res.json();
     if (data.usage) { osUsage = data.usage; renderAcct(); }
@@ -1214,9 +1220,19 @@ async function sendMessage() {
     if (data.text) {
       playPing();
       const reply = data.text;
-      addMsg('ai', reply);
-      if (/<!doctype|<html/i.test(reply)) {
-        offerDownload(reply);
+      if (ccMode) {
+        const m = reply.match(/<<<PROMPT\s*([\s\S]*?)\s*PROMPT>>>/);
+        const o = reply.indexOf('<<<PROMPT');
+        const before = (o === -1 ? reply : reply.slice(0, o)).trim();
+        if (before) addMsg('ai', before);
+        if (m) { offerCCPrompt(m[1], true); ccMode = false; document.getElementById('chatInput').placeholder = 'describe what to build...'; }
+        else if (o !== -1) offerCCPrompt(reply.slice(o + 9).trim(), false);
+        else addMsg('ai', reply);
+      } else {
+        addMsg('ai', reply);
+        if (/<!doctype|<html/i.test(reply)) {
+          offerDownload(reply);
+        }
       }
     } else if (data.code === 'limit') {
       addMsg('ai', '> ' + data.error + (OS.checkoutUrl ? ' Open the menu and choose Upgrade for more.' : ' It resets next month.'));
@@ -1231,6 +1247,77 @@ async function sendMessage() {
   isThinking = false;
   document.getElementById('sendBtn').disabled = false;
   input.focus();
+}
+
+// ── FULL SITE WITH CLAUDE CODE (writes a build prompt the user pastes into their own Claude Code) ──
+const CC_SYSTEM = `You are OwnSite. The user wants a FULL website or app (more than one page, or with logins, a database, payments, or other server features). You do not build it here. You write one complete, ready-to-paste build prompt for Claude Code, which will build it in the user's own GitHub repo and publish it to their own hosting.
+
+Work from the user's single message. You cannot ask questions and get an answer, so where something is missing, choose the simplest sensible default and list it under ASSUMPTIONS.
+
+OUTPUT FORMAT (exactly, nothing after the closing marker):
+1. ASSUMPTIONS: a short bullet list of the choices you made that the user should check.
+2. Then the prompt between these two marker lines, each alone on its own line:
+<<<PROMPT
+...the prompt...
+PROMPT>>>
+
+THE PROMPT MUST BE WRITTEN TO CLAUDE CODE (second person, "you") AND INCLUDE:
+- GOAL: what is being built, for whom, and the one outcome that matters.
+- SCOPE: every page or screen, each with its purpose and main content; every feature; what is NOT included in version 1.
+- TECH: default to plain HTML, CSS and JavaScript as a static site, no framework, unless a feature truly needs more. If it needs accounts, data or payments, use Supabase (auth and database) and Stripe hosted Checkout, with secrets kept in environment variables, never in code. Use only services the owner holds their own account for. No proprietary builder or platform that locks the owner in.
+- STRUCTURE: the folder and file layout.
+- DESIGN: style, colors, fonts, mobile-first, readable text sizes, accessible contrast.
+- CONTENT: use clearly marked placeholders such as [YOUR BUSINESS NAME] for anything not provided. Never invent testimonials, reviews, statistics, awards, licenses, prices, or claims. Include privacy and terms pages that do not name a legal entity unless the user gave one.
+- DATA AND SECURITY (only if relevant): tables and fields, who can read or write what, row-level security on, input validation.
+- HOW TO WORK: first show a short plan and ask any blocking questions; then build in small steps, test each, commit to git with clear messages; finish by explaining how to run it locally and how to deploy it (Cloudflare Pages for static or Workers for server parts) and listing exactly what the owner must still fill in.
+
+Keep the prompt specific and complete but under about 1500 words. Plain text, no code fences around the whole prompt. Do not add legal, tax or medical claims. No emojis.`;
+
+function startCC() {
+  ccMode = true;
+  addMsg('ai', "> FULL SITE MODE\n\nTell me everything about the site or app in one message: what it is, who it's for, the pages, and any logins, payments or database you need. I'll write a complete prompt. You paste it into your own Claude Code, and it builds the project in your own GitHub and publishes it on your own hosting.\n\nAnything you leave out, I'll choose a simple default and list it for you to check.");
+  const i = document.getElementById('chatInput');
+  i.placeholder = 'describe the full site or app...';
+  i.focus();
+}
+
+function offerCCPrompt(promptText, complete) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `
+    <div class="build-output">
+      <div class="build-title">${complete ? '◈ CLAUDE CODE PROMPT READY' : '⚠ PROMPT CUT OFF · MAY BE INCOMPLETE, TRY AGAIN'}</div>
+      <pre class="cc-box"></pre>
+      <div class="build-actions">
+        <button class="build-btn primary" data-act="copy">COPY PROMPT</button>
+        <button class="build-btn" data-act="dl">⬇ SAVE .MD</button>
+        <button class="build-btn" data-act="how">HOW TO USE</button>
+      </div>
+      <div class="cc-how" style="display:none;">1. Install Claude Code and sign in with your Claude account (claude.com/claude-code).<br>2. Make an empty folder for the project and open Claude Code inside it.<br>3. Paste the prompt. It will show a plan first. Check it, then say go.<br>4. When it's built, ask it to push to a new GitHub repo of yours and deploy to Cloudflare Pages.<br>5. Fill in every [PLACEHOLDER] with your real information before you publish.</div>
+    </div>`;
+  div.querySelector('.cc-box').textContent = promptText;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  const copyBtn = div.querySelector('[data-act="copy"]');
+  copyBtn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(promptText); copyBtn.textContent = 'COPIED ✓'; }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents(div.querySelector('.cc-box'));
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      copyBtn.textContent = 'PRESS CTRL/CMD+C';
+    }
+    setTimeout(() => { copyBtn.textContent = 'COPY PROMPT'; }, 2500);
+  });
+  div.querySelector('[data-act="dl"]').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([promptText], { type: 'text/markdown' }));
+    a.download = 'ownsite-claude-code-prompt.md'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  div.querySelector('[data-act="how"]').addEventListener('click', () => {
+    const h = div.querySelector('.cc-how'); h.style.display = h.style.display === 'none' ? 'block' : 'none';
+  });
 }
 
 // ── DOWNLOAD GENERATED FILES ──────────────────────────────────
