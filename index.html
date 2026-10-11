@@ -16,8 +16,8 @@
   --sky-high:     #1a2840;
   --foam:         rgba(255,255,255,0.06);
   --text:         #e8e0d0;
-  --text2:        #a09080;
-  --text3:        #5a5048;
+  --text2:        #c2b4a0;
+  --text3:        #9a8c7c;
   --amber:        #d4905a;
   --amber2:       #e8a870;
   --red-dot:      #c0392b;
@@ -129,7 +129,7 @@ body::before {
   transition: opacity 0.8s ease;
 }
 .boot-text {
-  font-family: var(--mono); font-size: 12px;
+  font-family: var(--mono); font-size: 15px;
   color: var(--amber); line-height: 2;
   max-width: 480px; width: 100%; text-align: left;
 }
@@ -211,10 +211,10 @@ header {
 }
 .logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: logoBlink 1.5s infinite; }
 @keyframes logoBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-.logo-sub { font-size: 9px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; display: block; }
+.logo-sub { font-size: 12px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; display: block; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .hdr-btn {
-  font-family: var(--mono); font-size: 11px;
+  font-family: var(--mono); font-size: 13px;
   color: var(--text3); background: transparent;
   border: 1px solid rgba(212,144,90,0.15);
   border-radius: 0; padding: 5px 12px;
@@ -222,7 +222,7 @@ header {
   text-transform: uppercase; transition: all 0.2s;
 }
 .hdr-btn:hover { color: var(--amber); border-color: rgba(212,144,90,0.4); }
-.status-line { font-size: 10px; color: var(--text3); letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+.status-line { font-size: 12px; color: var(--text3); letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
 .status-ok { width: 6px; height: 6px; border-radius: 50%; background: #4a9; animation: logoBlink 2s infinite; }
 
 /* ── MESSAGES ─────────────────────────────────────────────── */
@@ -253,17 +253,17 @@ header {
 .welcome-title span { color: var(--amber); font-style: normal; }
 @media (max-width: 480px) { .hdr-tag { display: none; } }
 .welcome-tag {
-  font-family: var(--mono); font-size: 12px; line-height: 1.7;
+  font-family: var(--mono); font-size: 15px; line-height: 1.7;
   color: var(--text); max-width: 460px; margin: 0 auto 28px;
   text-shadow: 0 1px 6px rgba(0,0,0,0.7);
 }
 .welcome-sub {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--text3); letter-spacing: 3px;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--text2); letter-spacing: 3px;
   text-transform: uppercase; margin-bottom: 14px;
 }
 .prompt-line {
-  font-family: var(--mono); font-size: 13px;
+  font-family: var(--mono); font-size: 16px;
   color: var(--amber2); margin-bottom: 32px;
   display: flex; align-items: center; gap: 8px;
 }
@@ -273,7 +273,7 @@ header {
   gap: 8px; max-width: 560px; width: 100%;
 }
 .starter {
-  font-family: var(--mono); font-size: 11px;
+  font-family: var(--mono); font-size: 13px;
   color: var(--text2); background: rgba(10,22,40,0.6);
   border: 1px solid rgba(212,144,90,0.1);
   padding: 12px 14px; cursor: pointer; text-align: left;
@@ -290,12 +290,12 @@ header {
 /* MESSAGES */
 .msg { display: flex; flex-direction: column; gap: 6px; animation: msgIn 0.3s ease both; }
 @keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-.msg-header { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.msg-header { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
 .msg.user .msg-header { color: var(--text3); justify-content: flex-end; }
 .msg.ai .msg-header { color: var(--amber); }
 .msg-prefix { color: var(--amber); }
 .msg-bubble {
-  font-family: var(--mono); font-size: 13px; line-height: 1.8;
+  font-family: var(--mono); font-size: 16px; line-height: 1.8;
   padding: 14px 16px; max-width: 80%;
   backdrop-filter: blur(8px);
 }
@@ -313,7 +313,7 @@ header {
 }
 .msg.system .msg-bubble {
   background: transparent; border: none;
-  color: var(--text3); font-size: 11px;
+  color: var(--text3); font-size: 13px;
   padding: 4px 0; letter-spacing: 1px;
   border-left: none;
 }
@@ -339,16 +339,16 @@ header {
   padding: 16px 18px; margin-top: 10px;
   backdrop-filter: blur(8px);
 }
-.section-title { font-size: 10px; color: var(--amber); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+.section-title { font-size: 12px; color: var(--amber); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
 .section-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
 .section-item {
-  font-size: 11px; color: var(--text2); padding: 8px 10px;
+  font-size: 13px; color: var(--text2); padding: 8px 10px;
   border: 1px solid rgba(212,144,90,0.08);
   cursor: pointer; transition: all 0.15s;
   display: flex; align-items: center; gap: 8px;
 }
 .section-item:hover { border-color: rgba(212,144,90,0.3); color: var(--amber2); background: rgba(212,144,90,0.04); }
-.si-prefix { color: var(--amber); font-size: 10px; }
+.si-prefix { color: var(--amber); font-size: 12px; }
 
 /* BUILD OUTPUT */
 .build-output {
@@ -357,11 +357,11 @@ header {
   border-left: 3px solid var(--amber);
   padding: 16px; margin-top: 10px;
 }
-.build-title { font-size: 10px; color: var(--amber); letter-spacing: 3px; margin-bottom: 8px; }
-.build-preview { font-size: 11px; color: var(--text2); line-height: 1.6; max-height: 200px; overflow-y: auto; }
+.build-title { font-size: 12px; color: var(--amber); letter-spacing: 3px; margin-bottom: 8px; }
+.build-preview { font-size: 13px; color: var(--text2); line-height: 1.6; max-height: 200px; overflow-y: auto; }
 .build-actions { display: flex; gap: 8px; margin-top: 12px; }
 .build-btn {
-  font-family: var(--mono); font-size: 11px;
+  font-family: var(--mono); font-size: 13px;
   padding: 7px 16px; border: 1px solid rgba(212,144,90,0.3);
   background: transparent; color: var(--amber2);
   cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
@@ -373,7 +373,7 @@ header {
 /* ── ACCOUNT / USAGE ──────────────────────────────────────── */
 .meter { height: 6px; background: rgba(212,144,90,0.15); margin: 8px 0 4px; }
 .meter > i { display: block; height: 100%; background: var(--amber); width: 0; transition: width 0.4s ease; }
-.acct-note { font-size: 10px; color: var(--text3); letter-spacing: 1px; line-height: 1.6; }
+.acct-note { font-size: 12px; color: var(--text3); letter-spacing: 1px; line-height: 1.6; }
 .acct-row { display: flex; align-items: center; gap: 10px; }
 .acct-row input { accent-color: var(--amber); width: 18px; height: 18px; }
 
@@ -400,7 +400,7 @@ header {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 14px; border-bottom: 1px solid rgba(212,144,90,0.2);
 }
-.pv-title { flex: 1; font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--amber); }
+.pv-title { flex: 1; font-family: var(--mono); font-size: 12px; letter-spacing: 3px; color: var(--amber); }
 .pv-frame { flex: 1; width: 100%; border: 0; background: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .pv-backdrop, .pv-panel { transition: none; }
@@ -431,27 +431,27 @@ header {
 .menu-close {
   width: 28px; height: 28px; background: transparent;
   border: 1px solid rgba(212,144,90,0.2); color: var(--text3);
-  font-size: 14px; cursor: pointer; display: flex;
+  font-size: 16px; cursor: pointer; display: flex;
   align-items: center; justify-content: center;
   transition: all 0.15s;
 }
 .menu-close:hover { color: var(--amber); border-color: var(--amber); }
 .menu-section { padding: 16px 14px 8px; }
-.menu-label { font-size: 9px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; padding: 0 6px; margin-bottom: 4px; }
+.menu-label { font-size: 12px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; padding: 0 6px; margin-bottom: 4px; }
 .menu-item {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px; color: var(--text2); cursor: pointer;
-  font-size: 12px; transition: all 0.15s; letter-spacing: 1px;
+  font-size: 15px; transition: all 0.15s; letter-spacing: 1px;
   border-left: 2px solid transparent;
 }
 .menu-item:hover { color: var(--amber2); border-left-color: var(--amber); background: rgba(212,144,90,0.04); }
 .menu-item.active { color: var(--amber); border-left-color: var(--amber); }
-.menu-item .mi-icon { font-size: 14px; width: 18px; text-align: center; }
+.menu-item .mi-icon { font-size: 16px; width: 18px; text-align: center; }
 .menu-divider { height: 1px; background: rgba(212,144,90,0.08); margin: 6px 14px; }
 .menu-footer {
   margin-top: auto; padding: 14px;
   border-top: 1px solid rgba(212,144,90,0.08);
-  font-size: 10px; color: var(--text3); letter-spacing: 1px; line-height: 1.6;
+  font-size: 12px; color: var(--text3); letter-spacing: 1px; line-height: 1.6;
 }
 
 /* ── INPUT ────────────────────────────────────────────────── */
@@ -469,10 +469,10 @@ header {
   transition: border-color 0.2s;
 }
 .input-wrap:focus-within { border-color: rgba(212,144,90,0.5); }
-.input-prompt { padding: 12px 10px 12px 14px; font-size: 14px; color: var(--amber); flex-shrink: 0; }
+.input-prompt { padding: 12px 10px 12px 14px; font-size: 16px; color: var(--amber); flex-shrink: 0; }
 .chat-input {
   flex: 1; background: transparent; border: none; outline: none;
-  font-family: var(--mono); font-size: 13px; color: var(--text);
+  font-family: var(--mono); font-size: 16px; color: var(--text);
   resize: none; min-height: 22px; max-height: 100px;
   line-height: 1.6; padding: 12px 8px;
 }
@@ -480,14 +480,14 @@ header {
 .send-btn {
   padding: 12px 16px; background: rgba(212,144,90,0.1);
   border: none; border-left: 1px solid rgba(212,144,90,0.2);
-  color: var(--amber); font-family: var(--mono); font-size: 11px;
+  color: var(--amber); font-family: var(--mono); font-size: 13px;
   cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
   transition: all 0.15s; flex-shrink: 0;
 }
 .send-btn:hover { background: rgba(212,144,90,0.2); }
 .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .input-footer { display: flex; justify-content: space-between; margin-top: 6px; padding: 0 2px; }
-.input-hint { font-size: 10px; color: var(--text3); letter-spacing: 1px; }
+.input-hint { font-size: 12px; color: var(--text3); letter-spacing: 1px; }
 
 /* PAGES */
 .page {
@@ -504,27 +504,31 @@ header {
   position: sticky; top: 0; background: rgba(8,16,28,0.95); z-index: 1;
 }
 .page-back {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
   color: var(--text3); background: transparent;
   border: 1px solid rgba(212,144,90,0.15); padding: 5px 12px;
   cursor: pointer; text-transform: uppercase; transition: all 0.15s;
 }
 .page-back:hover { color: var(--amber); border-color: rgba(212,144,90,0.4); }
-.page-title { font-family: var(--mono); font-size: 13px; color: var(--amber); letter-spacing: 3px; text-transform: uppercase; }
+.page-title { font-family: var(--mono); font-size: 16px; color: var(--amber); letter-spacing: 3px; text-transform: uppercase; }
 .page-body { padding: 24px 20px; max-width: 640px; margin: 0 auto; }
 .page-section { margin-bottom: 28px; }
 .page-section h3 { font-family: var(--serif); font-size: 20px; font-weight: 300; font-style: italic; color: var(--text); margin-bottom: 10px; }
-.page-section p { font-size: 12px; color: var(--text2); line-height: 1.8; margin-bottom: 8px; letter-spacing: 0.3px; }
+.page-section p { font-size: 15px; color: var(--text2); line-height: 1.8; margin-bottom: 8px; letter-spacing: 0.3px; }
 .page-section ul { padding-left: 16px; }
-.page-section li { font-size: 12px; color: var(--text2); line-height: 1.8; margin-bottom: 4px; }
+.page-section li { font-size: 15px; color: var(--text2); line-height: 1.8; margin-bottom: 4px; }
 .warn-box { border: 1px solid rgba(212,144,90,0.3); border-left: 3px solid var(--amber); padding: 12px 14px; margin-bottom: 16px; }
-.warn-box strong { font-size: 11px; color: var(--amber); display: block; margin-bottom: 5px; letter-spacing: 1px; text-transform: uppercase; }
-.warn-box p { font-size: 12px; color: var(--text2); margin: 0; }
+.warn-box strong { font-size: 13px; color: var(--amber); display: block; margin-bottom: 5px; letter-spacing: 1px; text-transform: uppercase; }
+.warn-box p { font-size: 15px; color: var(--text2); margin: 0; }
 
 @media(max-width:540px){
   .starters { grid-template-columns: 1fr; }
   .section-grid { grid-template-columns: 1fr; }
   .msg-bubble { max-width: 92%; }
+  .status-line, #themeLbl { display: none; }
+  .welcome-sub { letter-spacing: 1px; font-size: 12px; }
+  .input-hint:first-child { display: none; }
+  .input-footer { justify-content: flex-end; }
 }
 </style>
 </head>
@@ -589,7 +593,7 @@ header {
         <div class="logo-dot"></div>
         OWNSITE
         <div>
-          <div style="font-size:8px;color:var(--text3);letter-spacing:3px;margin-top:1px;white-space:nowrap;" class="hdr-tag">YOUR IDEA · YOUR CODE</div>
+          <div style="font-size: 11px;color:var(--text3);letter-spacing:3px;margin-top:1px;white-space:nowrap;" class="hdr-tag">YOUR IDEA · YOUR CODE</div>
         </div>
       </div>
     </div>
@@ -598,8 +602,8 @@ header {
         <div class="status-ok"></div>
         <span>SONNET 5.5</span>
       </div>
-      <button class="hdr-btn" onclick="cycleTheme()" id="themeBtn" style="font-size:14px;letter-spacing:0;padding:5px 8px;" title="Change ocean theme">🌙</button>
-      <span id="themeLbl" style="font-size:9px;color:var(--text3);letter-spacing:2px;">NIGHT</span>
+      <button class="hdr-btn" onclick="cycleTheme()" id="themeBtn" style="font-size: 16px;letter-spacing:0;padding:5px 8px;" title="Change ocean theme">🌙</button>
+      <span id="themeLbl" style="font-size: 12px;color:var(--text3);letter-spacing:2px;">NIGHT</span>
       <button class="hdr-btn" onclick="newSession()">NEW</button>
     </div>
   </header>
@@ -629,7 +633,7 @@ header {
     <div class="input-wrap">
       <span class="input-prompt">></span>
       <textarea class="chat-input" id="chatInput"
-        placeholder="transmit your request..."
+        placeholder="describe what to build..."
         rows="1"
         onkeydown="handleKey(event)"
         oninput="autoResize(this)"></textarea>
@@ -685,7 +689,7 @@ header {
   <div class="page-head"><button class="page-back" onclick="closePage('mybuilds')">← BACK</button><div class="page-title">MY BUILDS</div></div>
   <div class="page-body">
     <div class="page-section">
-      <p style="color:var(--text3);font-size:11px;letter-spacing:1px;margin-bottom:20px;">SAVED IN THIS BROWSER ONLY · LAST 20 COMPLETE BUILDS</p>
+      <p style="color:var(--text3);font-size: 13px;letter-spacing:1px;margin-bottom:20px;">SAVED IN THIS BROWSER ONLY · LAST 20 COMPLETE BUILDS</p>
       <div id="myBuildsList" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
   </div>
@@ -848,7 +852,7 @@ function openMyBuilds() {
     row.className = 'section-item';
     row.style.cssText = 'padding:14px 16px;border-color:rgba(212,144,90,0.2);flex-direction:column;align-items:stretch;gap:10px;';
     const name = document.createElement('div');
-    name.style.cssText = 'font-size:12px;color:var(--amber2);letter-spacing:1px;';
+    name.style.cssText = 'font-size: 15px;color:var(--amber2);letter-spacing:1px;';
     name.textContent = b.title + ' · ' + new Date(b.id).toLocaleDateString();
     const acts = document.createElement('div');
     acts.className = 'build-actions';
@@ -899,9 +903,9 @@ function escapeHtml(s) {
 // (a build that was cut off before its closing fence).
 function formatAiText(text) {
   const fence = /```(\w*)\n?([\s\S]*?)(?:```|$)/g;
-  const codeStyle = 'background:rgba(0,0,0,0.5);border:1px solid rgba(212,144,90,0.15);padding:10px;margin:8px 0;font-size:11px;overflow-x:auto;white-space:pre;border-left:2px solid var(--amber);';
+  const codeStyle = 'background:rgba(0,0,0,0.5);border:1px solid rgba(212,144,90,0.15);padding:10px;margin:8px 0;font-size: 13px;overflow-x:auto;white-space:pre;border-left:2px solid var(--amber);';
   const prose = (s) => escapeHtml(s)
-    .replace(/━━━(.+?)━━━/g, '<div style="color:var(--amber);font-size:10px;letter-spacing:3px;margin:10px 0 6px;">━━━$1━━━</div>')
+    .replace(/━━━(.+?)━━━/g, '<div style="color:var(--amber);font-size: 12px;letter-spacing:3px;margin:10px 0 6px;">━━━$1━━━</div>')
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--amber2);">$1</strong>')
     .replace(/\n/g, '<br>');
   let out = '', last = 0, m;
@@ -1007,7 +1011,7 @@ function showTyping(userText) {
       <span style="color:var(--amber);">OWNSITE</span>
       <span style="color:var(--text3);">· PROCESSING</span>
     </div>
-    <div class="msg-bubble" id="buildLog" style="font-size:11px;line-height:2;min-width:240px;">
+    <div class="msg-bubble" id="buildLog" style="font-size: 13px;line-height:2;min-width:240px;">
       <span style="color:var(--amber);">></span> INITIALIZING...<span class="blink">_</span>
     </div>`;
   msgs.appendChild(div);
@@ -1156,7 +1160,7 @@ function openAccounts() {
     cb.onchange = () => { const t = loadAcctTicks(); t[sv.id] = cb.checked; try { localStorage.setItem('ownsite_accts', JSON.stringify(t)); } catch (e) {} };
     const txt = document.createElement('div');
     txt.style.cssText = 'flex:1;';
-    txt.innerHTML = '<div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">' + sv.name.toUpperCase() + '</div><div class="acct-note">' + sv.why + '</div>';
+    txt.innerHTML = '<div style="font-size: 15px;color:var(--amber2);letter-spacing:1px;">' + sv.name.toUpperCase() + '</div><div class="acct-note">' + sv.why + '</div>';
     const go = document.createElement('a');
     go.className = 'build-btn'; go.textContent = 'OPEN'; go.href = sv.url; go.target = '_blank'; go.rel = 'noopener';
     go.style.textDecoration = 'none';
@@ -1537,7 +1541,7 @@ setTimeout(() => {
     tap.style.cssText = `
       position: absolute; bottom: 40px; left: 0; right: 0;
       text-align: center; font-family: var(--mono);
-      font-size: 11px; color: var(--amber);
+      font-size: 13px; color: var(--amber);
       letter-spacing: 3px; text-transform: uppercase;
       animation: logoBlink 1.5s infinite;
       cursor: pointer;
