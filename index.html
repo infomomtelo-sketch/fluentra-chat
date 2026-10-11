@@ -1156,9 +1156,17 @@ let pvContent = '';
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
 })();
 
+// Runs inside the preview iframe: keeps links/forms from loading the chat page in it.
+const PV_GUARD = '<script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";if(h.charAt(0)==="#"){e.preventDefault();var t=h.length>1?document.getElementById(h.slice(1))||document.querySelector("[name=\\""+h.slice(1)+"\\"]"):null;if(t)t.scrollIntoView({behavior:"smooth"});else if(h==="#"||h==="")window.scrollTo({top:0,behavior:"smooth"});return;}if(/^(tel:|mailto:|sms:)/i.test(h))return;e.preventDefault();if(/^https?:/i.test(h))window.open(h,"_blank","noopener");},true);document.addEventListener("submit",function(e){e.preventDefault();},true);<\/script>';
+
+function withGuard(html) {
+  const i = html.toLowerCase().lastIndexOf('</body>');
+  return i === -1 ? html + PV_GUARD : html.slice(0, i) + PV_GUARD + html.slice(i);
+}
+
 function openPreview(content) {
   pvContent = content;
-  document.getElementById('pvFrame').srcdoc = extractHtml(content);
+  document.getElementById('pvFrame').srcdoc = withGuard(extractHtml(content));
   document.getElementById('pvBackdrop').classList.add('open');
   document.getElementById('pvPanel').classList.add('open');
 }
