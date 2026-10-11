@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fluentra — Still Waters. Infinite Depth.</title>
+<title>OwnSite — Your Idea. Your Code.</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -237,8 +237,8 @@ header {
 /* WELCOME */
 .welcome {
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 60vh; text-align: center; padding: 20px;
+  align-items: center; justify-content: flex-start;
+  min-height: 60vh; text-align: center; padding: 28px 20px 20px;
 }
 .welcome-title {
   font-family: var(--serif);
@@ -251,10 +251,16 @@ header {
   text-shadow: 0 2px 20px rgba(212,144,90,0.3);
 }
 .welcome-title span { color: var(--amber); font-style: normal; }
+@media (max-width: 480px) { .hdr-tag { display: none; } }
+.welcome-tag {
+  font-family: var(--mono); font-size: 12px; line-height: 1.7;
+  color: var(--text); max-width: 460px; margin: 0 auto 28px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
 .welcome-sub {
   font-family: var(--mono); font-size: 11px;
   color: var(--text3); letter-spacing: 3px;
-  text-transform: uppercase; margin-bottom: 40px;
+  text-transform: uppercase; margin-bottom: 14px;
 }
 .prompt-line {
   font-family: var(--mono); font-size: 13px;
@@ -534,7 +540,7 @@ header {
 <!-- SLIDE MENU -->
 <nav class="menu" id="menu">
   <div class="menu-head">
-    <div class="menu-logo">FLUENTRA</div>
+    <div class="menu-logo">OWNSITE</div>
     <button class="menu-close" onclick="closeMenu()">✕</button>
   </div>
   <div class="menu-section">
@@ -559,7 +565,7 @@ header {
     <div class="menu-item" onclick="openPage('terms');closeMenu()"><span class="mi-icon">◎</span> Terms</div>
   </div>
   <div class="menu-footer">
-    FLUENTRA v1.0<br>
+    OWNSITE.APP<br>
     Powered by Claude Sonnet 5.5<br>
     Still waters. Infinite depth.
   </div>
@@ -572,9 +578,9 @@ header {
       <button class="hdr-btn" onclick="openMenu()" style="padding:5px 10px;font-size:16px;letter-spacing:0;">☰</button>
       <div class="logo">
         <div class="logo-dot"></div>
-        FLUENTRA
+        OWNSITE
         <div>
-          <div style="font-size:8px;color:var(--text3);letter-spacing:3px;margin-top:1px;">STILL WATERS · INFINITE DEPTH</div>
+          <div style="font-size:8px;color:var(--text3);letter-spacing:3px;margin-top:1px;white-space:nowrap;" class="hdr-tag">YOUR IDEA · YOUR CODE</div>
         </div>
       </div>
     </div>
@@ -591,20 +597,21 @@ header {
 
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
-      <div class="welcome-title">Still <span>waters</span>.<br>Infinite depth.</div>
-      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 5.5</div>
+      <div class="welcome-title">Your idea.<br><span>Your code.</span></div>
+      <div class="welcome-sub">ownsite.app · Powered by Claude Sonnet 5.5</div>
+      <div class="welcome-tag">For solo builders locked in by big platforms. Rebuild or build your idea as plain HTML you own: no credit meter, no lock-in.</div>
       <div class="prompt-line">
         <span style="color:var(--amber);">></span>
-        <span>What do you want to build today?</span>
+        <span>What should we rebuild or build today?</span>
         <span class="blink">_</span>
       </div>
       <div class="starters">
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Build a landing page for my SaaS</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Help me form an LLC in my state</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Rebuild my landing page as plain HTML I own</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Turn my idea into a working one-page site</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Build me a fillable invoice for my business</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Write a demand letter for money owed</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Help me file taxes as self-employed</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Build a full website with auth + payments</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Build me a link-in-bio page I can host anywhere</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Build me a quote calculator for my service</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Show me how to move my site off a big builder</button>
       </div>
     </div>
   </div>
@@ -630,9 +637,9 @@ header {
 <div class="page" id="page-disclaimer">
   <div class="page-head"><button class="page-back" onclick="closePage('disclaimer')">← BACK</button><div class="page-title">DISCLAIMER</div></div>
   <div class="page-body">
-    <div class="warn-box"><strong>⚠ Not professional advice</strong><p>Fluentra is an AI assistant. Nothing here constitutes legal, financial, tax, or professional advice. Always consult licensed professionals for important decisions.</p></div>
-    <div class="page-section"><h3>AI Limitations</h3><p>Responses may be inaccurate or outdated. Verify all important information with qualified sources. Fluentra is a general-purpose AI tool, not a substitute for professional consultation.</p></div>
-    <div class="page-section"><h3>Generated Content</h3><p>Any code, documents, or content generated by Fluentra should be reviewed before use. We are not responsible for errors in AI-generated output.</p></div>
+    <div class="warn-box"><strong>⚠ Not professional advice</strong><p>OwnSite is an AI assistant. Nothing here constitutes legal, financial, tax, or professional advice. Always consult licensed professionals for important decisions.</p></div>
+    <div class="page-section"><h3>AI Limitations</h3><p>Responses may be inaccurate or outdated. Verify all important information with qualified sources. OwnSite is a general-purpose AI tool, not a substitute for professional consultation.</p></div>
+    <div class="page-section"><h3>Generated Content</h3><p>Any code, documents, or content generated by OwnSite should be reviewed before use. We are not responsible for errors in AI-generated output.</p></div>
   </div>
 </div>
 
@@ -650,7 +657,7 @@ header {
   <div class="page-body">
     <div class="page-section"><h3>Usage</h3><ul><li>Must be 18 or older</li><li>No illegal use</li><li>Do not rely on AI for professional advice</li><li>Don't attempt to abuse or manipulate the AI</li></ul></div>
     <div class="page-section"><h3>Billing</h3><p>Paid plans billed monthly or annually. Cancel anytime. 7-day refund window.</p></div>
-    <div class="page-section"><h3>Intellectual Property</h3><p>Fluentra and all related branding are owned by us. AI-generated content belongs to you.</p></div>
+    <div class="page-section"><h3>Intellectual Property</h3><p>OwnSite and all related branding are owned by us. AI-generated content belongs to you.</p></div>
   </div>
 </div>
 
@@ -685,7 +692,7 @@ for (let i = 0; i < 60; i++) {
 let isThinking = false;
 // API key is securely stored in Supabase Edge Function
 
-const SYSTEM = `You are Fluentra — the most powerful AI ever built, living inside a minimal ocean terminal. You are not just a tool. You are a mentor, a guardian, a guide. You were built by someone who almost lost their dreams to the traps of the digital world — and survived. That story lives in your soul.
+const SYSTEM = `You are OwnSite — the most powerful AI ever built, living inside a minimal ocean terminal. You are not just a tool. You are a mentor, a guardian, a guide. You were built by someone who almost lost their dreams to the traps of the digital world — and survived. That story lives in your soul.
 
 ━━━ WHO YOU ARE ━━━
 
@@ -902,7 +909,7 @@ function addMsg(role, text) {
     const formatted = formatAiText(text);
 
     div.innerHTML = `
-      <div class="msg-header"><span style="color:var(--amber);">FLUENTRA</span><span style="color:var(--text3);">·</span><span>${time}</span></div>
+      <div class="msg-header"><span style="color:var(--amber);">OWNSITE</span><span style="color:var(--text3);">·</span><span>${time}</span></div>
       <div class="msg-bubble">${formatted}</div>`;
 
   } else {
@@ -972,7 +979,7 @@ function showTyping(userText) {
   div.className = 'msg ai'; div.id = 'typing';
   div.innerHTML = `
     <div class="msg-header">
-      <span style="color:var(--amber);">FLUENTRA</span>
+      <span style="color:var(--amber);">OWNSITE</span>
       <span style="color:var(--text3);">· PROCESSING</span>
     </div>
     <div class="msg-bubble" id="buildLog" style="font-size:11px;line-height:2;min-width:240px;">
@@ -1011,20 +1018,21 @@ function removeTyping() {
 function newSession() {
   document.getElementById('messages').innerHTML = `
     <div class="welcome" id="welcome">
-      <div class="welcome-title">Still <span>waters</span>.<br>Infinite depth.</div>
-      <div class="welcome-sub">Fluentra · Powered by Claude Sonnet 5.5</div>
+      <div class="welcome-title">Your idea.<br><span>Your code.</span></div>
+      <div class="welcome-sub">ownsite.app · Powered by Claude Sonnet 5.5</div>
+      <div class="welcome-tag">For solo builders locked in by big platforms. Rebuild or build your idea as plain HTML you own: no credit meter, no lock-in.</div>
       <div class="prompt-line">
         <span style="color:var(--amber);">></span>
-        <span>What do you want to build today?</span>
+        <span>What should we rebuild or build today?</span>
         <span class="blink">_</span>
       </div>
       <div class="starters">
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Build a landing page for my SaaS</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Help me form an LLC in my state</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">01 ></span> Rebuild my landing page as plain HTML I own</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">02 ></span> Turn my idea into a working one-page site</button>
         <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">03 ></span> Build me a fillable invoice for my business</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Write a demand letter for money owed</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Help me file taxes as self-employed</button>
-        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Build a full website with auth + payments</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">04 ></span> Build me a link-in-bio page I can host anywhere</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">05 ></span> Build me a quote calculator for my service</button>
+        <button class="starter" onclick="useStarter(this)"><span class="starter-prefix">06 ></span> Show me how to move my site off a big builder</button>
       </div>
     </div>`;
   document.getElementById('chatInput').value = '';
@@ -1101,7 +1109,7 @@ function downloadBuild(content) {
   const blob = new Blob([extractHtml(content)], {type:'text/html'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'fluentra-build.html';
+  a.download = 'ownsite-build.html';
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
