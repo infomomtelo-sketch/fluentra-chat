@@ -521,6 +521,15 @@ header {
 .warn-box strong { font-size: 13px; color: var(--amber); display: block; margin-bottom: 5px; letter-spacing: 1px; text-transform: uppercase; }
 .warn-box p { font-size: 15px; color: var(--text2); margin: 0; }
 
+
+/* DAY THEME */
+.theme-day .stars { display: none; }
+.theme-day .welcome-title { color: #0b2a44; text-shadow: 0 2px 14px rgba(255,255,255,0.6); }
+.theme-day .welcome-title span { color: #b04e12; }
+.theme-day .welcome-tag { color: #0b2a44; text-shadow: 0 1px 8px rgba(255,255,255,0.7); }
+.theme-day .welcome-sub { color: #17415f; }
+.theme-day .prompt-line { color: #8a3a08; }
+.theme-day .horizon-glow { opacity: 0.5; }
 @media(max-width:540px){
   .starters { grid-template-columns: 1fr; }
   .section-grid { grid-template-columns: 1fr; }
@@ -1495,14 +1504,15 @@ const themes = {
     horizon: '#e87040',
   },
   day: {
-    bg: 'linear-gradient(180deg,#1a4060 0%,#2a6080 8%,#60a0c0 28%,#80c0d8 32%,#60a0c0 36%,#2a7090 45%,#1a5070 60%,#0d3050 75%,#081828 100%)',
+    bg: 'radial-gradient(circle at 78% 14%,#fff7d6 0%,#ffe9a0 5%,rgba(255,233,160,0) 20%),linear-gradient(180deg,#5aaee8 0%,#8cd0f5 20%,#d6efff 30%,#4fb4d8 32%,#2d93c0 50%,#1b6f9c 75%,#0f4f78 100%)',
     icon: '☀️',
     label: 'DAY',
-    horizon: '#60c0d8',
+    horizon: '#ffffff',
   }
 };
 
 let currentTheme = 'night';
+try { const t = localStorage.getItem('ownsite_theme'); if (themes[t]) currentTheme = t; } catch(e) {}
 const themeOrder = ['night', 'dawn', 'day'];
 
 function cycleTheme() {
@@ -1514,6 +1524,8 @@ function cycleTheme() {
 
 function applyTheme(name) {
   const t = themes[name];
+  document.body.classList.toggle('theme-day', name === 'day');
+  try { localStorage.setItem('ownsite_theme', name); } catch(e) {}
   document.querySelector('.ocean-bg').style.background = t.bg;
   document.querySelector('.horizon-glow').style.background =
     `linear-gradient(90deg, transparent 0%, ${t.horizon} 20%, ${t.horizon} 50%, ${t.horizon} 80%, transparent 100%)`;
@@ -1525,6 +1537,8 @@ function applyTheme(name) {
     oceanGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 1);
   }
 }
+
+applyTheme(currentTheme);
 
 // Init audio on first interaction — including intro screen
 document.addEventListener('click', initAudio, { once: true });
