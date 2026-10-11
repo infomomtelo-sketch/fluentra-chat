@@ -365,6 +365,35 @@ header {
 .build-btn:hover { background: rgba(212,144,90,0.1); border-color: var(--amber); }
 .build-btn.primary { background: rgba(212,144,90,0.15); border-color: var(--amber); }
 
+/* ── PREVIEW SLIDE PANEL ──────────────────────────────────── */
+.pv-backdrop {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(4,10,20,0.6);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.pv-backdrop.open { opacity: 1; pointer-events: auto; }
+.pv-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 510;
+  width: min(760px, 100vw);
+  background: var(--ocean-deep);
+  border-left: 1px solid rgba(212,144,90,0.3);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(.22,.8,.3,1), visibility 0s linear 0.35s;
+}
+.pv-panel.open { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+.pv-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid rgba(212,144,90,0.2);
+}
+.pv-title { flex: 1; font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--amber); }
+.pv-frame { flex: 1; width: 100%; border: 0; background: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .pv-backdrop, .pv-panel { transition: none; }
+}
+
 /* ── MENU SLIDE ───────────────────────────────────────────── */
 .menu-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -1080,22 +1109,68 @@ function offerDownload(content) {
     <div class="build-output">
       <div class="build-title">${complete ? '◈ FILE GENERATED · READY FOR DEPLOYMENT' : '⚠ BUILD CUT OFF · FILE MAY BE INCOMPLETE'}</div>
       <div class="build-actions">
-        <button class="build-btn primary" onclick="downloadFile(this)">⬇ DOWNLOAD HTML</button>
-        <button class="build-btn" onclick="this.closest('.build-output').remove()">DISMISS</button>
+        <button class="build-btn primary" data-act="preview">▶ PREVIEW</button>
+        <button class="build-btn" data-act="download">⬇ DOWNLOAD HTML</button>
+        <button class="build-btn" data-act="dismiss">DISMISS</button>
       </div>
     </div>`;
-  div.querySelector('.build-btn').dataset.content = content;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 
-  div.querySelector('.build-btn.primary').addEventListener('click', () => {
-    const fileContent = extractHtml(content);
-    const blob = new Blob([fileContent], {type:'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'fluentra-build.html';
-    a.click();
-  });
+  div.querySelector('[data-act="preview"]').addEventListener('click', () => openPreview(content));
+  div.querySelector('[data-act="download"]').addEventListener('click', () => downloadBuild(content));
+  div.querySelector('[data-act="dismiss"]').addEventListener('click', () => div.querySelector('.build-output').remove());
+
+  if (complete) openPreview(content);
+}
+
+function downloadBuild(content) {
+  const blob = new Blob([extractHtml(content)], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fluentra-build.html';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ── SLIDE-IN PREVIEW ──────────────────────────────────────────
+let pvContent = '';
+(function buildPreviewPanel() {
+  const back = document.createElement('div');
+  back.className = 'pv-backdrop'; back.id = 'pvBackdrop';
+  const panel = document.createElement('div');
+  panel.className = 'pv-panel'; panel.id = 'pvPanel';
+  panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Build preview');
+  panel.innerHTML = `
+    <div class="pv-head">
+      <div class="pv-title">◈ PREVIEW</div>
+      <button class="build-btn" id="pvDownload">⬇ HTML</button>
+      <button class="build-btn" id="pvClose">CLOSE ✕</button>
+    </div>
+    <iframe class="pv-frame" id="pvFrame" title="Build preview" sandbox="allow-scripts allow-forms allow-popups"></iframe>`;
+  document.body.appendChild(back);
+  document.body.appendChild(panel);
+  back.addEventListener('click', closePreview);
+  panel.querySelector('#pvClose').addEventListener('click', closePreview);
+  panel.querySelector('#pvDownload').addEventListener('click', () => downloadBuild(pvContent));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+})();
+
+function openPreview(content) {
+  pvContent = content;
+  document.getElementById('pvFrame').srcdoc = extractHtml(content);
+  document.getElementById('pvBackdrop').classList.add('open');
+  document.getElementById('pvPanel').classList.add('open');
+}
+
+function closePreview() {
+  const panel = document.getElementById('pvPanel');
+  if (!panel.classList.contains('open')) return;
+  panel.classList.remove('open');
+  document.getElementById('pvBackdrop').classList.remove('open');
+  setTimeout(() => {
+    if (!panel.classList.contains('open')) document.getElementById('pvFrame').srcdoc = '';
+  }, 400);
 }
 
 // ── CINEMATIC INTRO SEQUENCE ─────────────────────────────────
