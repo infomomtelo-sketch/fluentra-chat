@@ -1156,7 +1156,7 @@ const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
-  checkoutUrl: ''                                // endpoint returning { url } for Stripe checkout; empty hides Upgrade
+  checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
 };
 let osClient = null, osUser = null, osUsage = null;
 const osEnabled = () => !!OS.anonKey;
@@ -1179,7 +1179,7 @@ function renderAcct() {
       (u ? '<div class="meter"><i style="width:' + pct + '%"></i></div><div class="acct-note">' + u.plan.toUpperCase() + ' · ' + fmtTok(u.used) + ' / ' + fmtTok(u.limit) + ' TOKENS THIS MONTH</div>'
          : '<div class="acct-note">Usage shows after your first message.</div>') +
     '</div>' +
-    (OS.checkoutUrl && (!u || u.plan !== 'pro') ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade</div>' : '') +
+    (OS.checkoutUrl && (!u || u.plan !== 'pro') ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade to Pro · $19/mo</div>' : '') +
     '<div class="menu-item" onclick="osSignOut()"><span class="mi-icon">✕</span> Sign out</div>';
 }
 
