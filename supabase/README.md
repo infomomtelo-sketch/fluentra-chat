@@ -8,3 +8,14 @@
 4. In `index.html` set `OS.anonKey` to the nwlhs anon (public) key. Sign-in and the meter turn on.
 5. Allowances live in `LIMITS` at the top of `ownsite-chat/index.ts` (free 30k, pro 500k tokens/month).
    Pro = `profiles.ownsite_pro = true`, which the existing Stripe webhook already sets.
+
+## Paid plan ($19/month)
+1. Stripe: restricted key with Checkout Sessions: Write + Customers: Write.
+2. nwlhs > Edge Functions > Secrets: add `STRIPE_SECRET_KEY` (that key).
+3. Deploy `ownsite-checkout` (Verify JWT can stay on).
+4. Deploy `ownsite-stripe-webhook` with Verify JWT turned OFF.
+5. Stripe > Developers > Webhooks > Add endpoint:
+   `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-stripe-webhook`
+   Events: `checkout.session.completed`, `customer.subscription.deleted`.
+6. Add the endpoint's signing secret as nwlhs secret `STRIPE_WEBHOOK_SECRET`.
+7. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout`.
