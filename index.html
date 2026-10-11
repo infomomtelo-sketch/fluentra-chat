@@ -676,15 +676,6 @@ header {
             </div>
           </div>
         </a>
-        <a href="https://postpilots.xyz" target="_blank" style="text-decoration:none;">
-          <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.2);">
-            <span style="font-size:18px;">📱</span>
-            <div>
-              <div style="font-size:12px;color:var(--amber2);letter-spacing:1px;">POSTPILOTS.XYZ</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Social media autopilot · AI captions · Auto-scheduling</div>
-            </div>
-          </div>
-        </a>
         <a href="https://dropvault.live" target="_blank" style="text-decoration:none;">
           <div class="section-item" style="padding:14px 16px;border-color:rgba(212,144,90,0.2);">
             <span style="font-size:18px;">🛒</span>
@@ -866,6 +857,36 @@ function removeWelcome() {
   const w = document.getElementById('welcome');
   if (w) w.remove();
 }
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Turn AI text into safe HTML. Handles closed code blocks AND an unclosed one
+// (a build that was cut off before its closing fence).
+function formatAiText(text) {
+  const fence = /```(\w*)\n?([\s\S]*?)(?:```|$)/g;
+  const codeStyle = 'background:rgba(0,0,0,0.5);border:1px solid rgba(212,144,90,0.15);padding:10px;margin:8px 0;font-size:11px;overflow-x:auto;white-space:pre;border-left:2px solid var(--amber);';
+  const prose = (s) => escapeHtml(s)
+    .replace(/━━━(.+?)━━━/g, '<div style="color:var(--amber);font-size:10px;letter-spacing:3px;margin:10px 0 6px;">━━━$1━━━</div>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--amber2);">$1</strong>')
+    .replace(/\n/g, '<br>');
+  let out = '', last = 0, m;
+  while ((m = fence.exec(text)) !== null) {
+    out += prose(text.slice(last, m.index));
+    out += `<div style="${codeStyle}">${escapeHtml(m[2])}</div>`;
+    last = m.index + m[0].length;
+    if (m[0].length === 0) fence.lastIndex++;
+  }
+  out += prose(text.slice(last));
+  return out;
+}
+
+// Pull the HTML out of an AI reply (fenced, unclosed-fence, or bare).
+function extractHtml(content) {
+  const m = content.match(/```(?:html)?[ \t]*\n?([\s\S]*?)(?:```|$)/i);
+  return (m ? m[1] : content).trim();
+}
+
 function addMsg(role, text) {
   removeWelcome();
   const msgs = document.getElementById('messages');
@@ -874,14 +895,9 @@ function addMsg(role, text) {
   const time = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
   if (role === 'ai') {
-    // Parse and render code blocks
-    const formatted = text
-      .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
-        `<div style="background:rgba(0,0,0,0.5);border:1px solid rgba(212,144,90,0.15);padding:10px;margin:8px 0;font-size:11px;overflow-x:auto;white-space:pre;border-left:2px solid var(--amber);">${code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
-      )
-      .replace(/━━━(.+?)━━━/g, '<div style="color:var(--amber);font-size:10px;letter-spacing:3px;margin:10px 0 6px;">━━━$1━━━</div>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--amber2);">$1</strong>')
-      .replace(/\n/g, '<br>');
+    // Parse and render code blocks. ALL text is HTML-escaped first, so AI output
+    // (including an unfinished/cut-off build) can never be injected into the page.
+    const formatted = formatAiText(text);
 
     div.innerHTML = `
       <div class="msg-header"><span style="color:var(--amber);">FLUENTRA</span><span style="color:var(--text3);">·</span><span>${time}</span></div>
@@ -1038,7 +1054,7 @@ async function sendMessage() {
       playPing();
       const reply = data.text;
       addMsg('ai', reply);
-      if (reply.includes('<!DOCTYPE') || reply.includes('<html')) {
+      if (/<!doctype|<html/i.test(reply)) {
         offerDownload(reply);
       }
     } else {
@@ -1059,9 +1075,10 @@ function offerDownload(content) {
   const msgs = document.getElementById('messages');
   const div = document.createElement('div');
   div.className = 'msg ai';
+  const complete = /<\/html>\s*(```)?\s*$/i.test(content.trim());
   div.innerHTML = `
     <div class="build-output">
-      <div class="build-title">◈ FILE GENERATED · READY FOR DEPLOYMENT</div>
+      <div class="build-title">${complete ? '◈ FILE GENERATED · READY FOR DEPLOYMENT' : '⚠ BUILD CUT OFF · FILE MAY BE INCOMPLETE'}</div>
       <div class="build-actions">
         <button class="build-btn primary" onclick="downloadFile(this)">⬇ DOWNLOAD HTML</button>
         <button class="build-btn" onclick="this.closest('.build-output').remove()">DISMISS</button>
@@ -1072,8 +1089,7 @@ function offerDownload(content) {
   msgs.scrollTop = msgs.scrollHeight;
 
   div.querySelector('.build-btn.primary').addEventListener('click', () => {
-    const htmlMatch = content.match(/```(?:html)?\n?([\s\S]*?)```/);
-    const fileContent = htmlMatch ? htmlMatch[1] : content;
+    const fileContent = extractHtml(content);
     const blob = new Blob([fileContent], {type:'text/html'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
