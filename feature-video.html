@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Video Maker Chat — OwnSite</title>
+<link rel="canonical" href="https://ownsite.app/feature-video">
+<meta name="description" content="Tell the chat a few words and paste your website link. Get a short narrated video you can play, share or download. Free.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OwnSite">
+<meta property="og:title" content="Video Maker Chat — OwnSite">
+<meta property="og:description" content="Type a few words and your link. Get a short narrated video. Free.">
+<meta property="og:url" content="https://ownsite.app/feature-video">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0a1628">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root { --deep:#0a1628; --text:#e8e0d0; --text2:#c2b4a0; --text3:#9a8c7c; --amber:#d4905a; --amber2:#e8a870; --line:rgba(212,144,90,0.25); --panel:rgba(8,16,28,0.72); --err:#ff8a7a; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; background: var(--deep); }
+body { font-family: 'Share Tech Mono', ui-monospace, Menlo, Consolas, monospace; color: var(--text); line-height: 1.55; display: flex; flex-direction: column; background: linear-gradient(180deg, #1a2840 0%, #0d2040 40%, #081820 100%); background-attachment: fixed; }
+a { color: var(--amber2); }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex: none; }
+.logo { color: var(--amber); letter-spacing: 4px; text-transform: uppercase; text-decoration: none; font-size: 16px; }
+.back { color: var(--text3); text-decoration: none; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; border: 1px solid var(--line); padding: 6px 12px; }
+.back:hover { color: var(--amber); }
+#log { flex: 1; overflow-y: auto; padding: 18px 14px 8px; }
+.col { max-width: 720px; margin: 0 auto; }
+.msg { margin-bottom: 16px; display: flex; flex-direction: column; }
+.msg.me { align-items: flex-end; }
+.who { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.msg.ai .who { color: var(--amber); }
+.bubble { max-width: 92%; padding: 10px 14px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.me .bubble { border-color: rgba(232,168,112,0.55); background: rgba(212,144,90,0.1); }
+.msg.ai .bubble { border-left: 2px solid var(--amber); }
+.bubble.err { border-color: var(--err); color: var(--err); }
+.dots span { display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: var(--amber); opacity: 0.3; animation: dot 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: .2s; } .dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes dot { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+.vcard { margin-top: 10px; width: 100%; max-width: 560px; }
+.pvBox { width: 100%; border: 1px solid var(--line); background: #000; }
+.pvBox.v { max-width: 320px; }
+.pvBox iframe { width: 100%; height: 100%; border: 0; display: block; }
+.vact { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.chip, .btn { font: inherit; font-size: 12px; letter-spacing: 1px; cursor: pointer; padding: 7px 12px; border: 1px solid var(--amber); background: transparent; color: var(--amber2); border-radius: 0; text-transform: uppercase; }
+.chip:hover, .btn:hover { background: rgba(212,144,90,0.14); }
+.btn.solid { background: var(--amber); color: #1a1008; }
+.btn.solid:hover { background: var(--amber2); }
+.chip:disabled { opacity: .5; cursor: default; }
+#bar { flex: none; border-top: 1px solid var(--line); background: var(--panel); padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); }
+#form { display: flex; gap: 8px; align-items: flex-end; }
+#msg { flex: 1; font: inherit; font-size: 16px; color: var(--text); background: rgba(0,0,0,0.45); border: 1px solid var(--line); padding: 10px 12px; resize: none; max-height: 140px; border-radius: 0; }
+#msg:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+#send { font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; padding: 12px 16px; border: 1px solid var(--amber); background: var(--amber); color: #1a1008; border-radius: 0; }
+#send:disabled { opacity: .5; cursor: default; }
+.hint { font-size: 12px; color: var(--text3); margin-top: 6px; }
+.hdr-l { display: flex; align-items: center; gap: 12px; }
+.menu-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber2); background: transparent; border: 1px solid var(--line); padding: 7px 12px; cursor: pointer; border-radius: 0; }
+.menu-btn:hover { border-color: var(--amber); }
+.menu-btn svg { width: 16px; height: 16px; }
+.ovl { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.ovl.on { opacity: 1; pointer-events: auto; }
+.menu { position: fixed; top: 0; bottom: 0; left: 0; width: min(330px, 88vw); z-index: 50; background: #0b1a2e; border-right: 1px solid var(--line); transform: translateX(-102%); transition: transform .28s ease; overflow-y: auto; padding: 16px 16px 28px; }
+.menu.on { transform: none; }
+.menu-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; color: var(--amber); letter-spacing: 4px; text-transform: uppercase; }
+.menu-x { font: inherit; font-size: 18px; color: var(--text3); background: transparent; border: 1px solid var(--line); width: 36px; height: 36px; cursor: pointer; border-radius: 0; }
+.menu-sec { margin-top: 18px; }
+.menu-lab { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+.opt { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); background: rgba(0,0,0,0.3); border: 1px solid var(--line); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; border-radius: 0; }
+.opt:hover { border-color: var(--amber); }
+.opt[aria-pressed=true] { border-color: var(--amber2); background: rgba(212,144,90,0.14); }
+.opt b { display: block; font-weight: 400; color: var(--amber2); font-size: 15px; }
+.opt small { display: block; color: var(--text3); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.opt.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.two .opt { margin: 0; text-align: center; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 64px; height: 40px; border: 2px solid transparent; cursor: pointer; padding: 0; position: relative; border-radius: 0; }
+.sw[aria-pressed=true] { border-color: var(--amber2); }
+.sw i { position: absolute; right: 4px; bottom: 4px; width: 12px; height: 12px; border-radius: 50%; }
+.menu a.opt { text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-l">
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+    <a class="logo" href="/">OwnSite</a>
+  </div>
+  <a class="back" href="/">Back to builder</a>
+</header>
+<div class="ovl" id="ovl"></div>
+<nav class="menu" id="menu" aria-label="Video options" aria-hidden="true">
+  <div class="menu-head"><span>Video options</span><button type="button" class="menu-x" id="menuX" aria-label="Close menu">&#x2715;</button></div>
+  <div class="menu-sec"><div class="menu-lab">Style</div><div id="mStyle"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Shape</div><div class="two" id="mShape"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Look</div><div class="swatches" id="mLook"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Sound</div><button type="button" class="opt row" id="mVoice" aria-pressed="true"><span><b>Spoken narration</b><small>Uses your device voice. Starts when you press Play.</small></span><span id="mVoiceState">On</span></button></div>
+  <div class="menu-sec"><div class="menu-lab">More</div>
+    <a class="opt" href="https://ecrentalpm.com/videos" target="_blank" rel="noopener noreferrer"><b>Watch the Tello sample</b><small>See the kind of video we make, then ask for one.</small></a>
+    <button type="button" class="opt" id="mNew"><b>Start a new video</b><small>Clears this chat.</small></button>
+  </div>
+</nav>
+<div id="log" aria-live="polite"><div class="col" id="col"></div></div>
+<div id="bar"><div class="col">
+  <form id="form" autocomplete="off">
+    <textarea id="msg" rows="2" maxlength="1200" placeholder="A few words about the video, and your website link" aria-label="Message"></textarea>
+    <button id="send" type="submit">Send</button>
+  </form>
+  <p class="hint">Free. The link is only read to write your video, and nothing is saved. Need a polished MP4 made for you? <a href="https://ecrentalpm.com/videos" target="_blank" rel="noopener noreferrer">See samples and request one</a>.</p>
+</div></div>
+
+<script>
+'use strict';
+/* ───────────────────────── Looks ───────────────────────── */
+var LOOKS = {
+  ocean:  { name: 'Ocean',  bg1: '#0a1628', bg2: '#1f4468', ink: '#f3ede0', muted: '#b9c4d2', accent: '#e8955a', accentInk: '#1a1008' },
+  sand:   { name: 'Sand',   bg1: '#f6ead2', bg2: '#fbf6ec', ink: '#13261f', muted: '#5b6b63', accent: '#c9801a', accentInk: '#ffffff' },
+  forest: { name: 'Forest', bg1: '#0f2a22', bg2: '#1f6140', ink: '#f4f1e6', muted: '#bdd1c5', accent: '#e8a23d', accentInk: '#1a1408' },
+  night:  { name: 'Night',  bg1: '#14122b', bg2: '#2f2670', ink: '#f1f0fb', muted: '#bcb8e3', accent: '#8ab4ff', accentInk: '#0b1230' }
+};
+
+/* ───────────────────────── Player ─────────────────────────
+   playerMain runs INSIDE the video page (iframe or downloaded file). It is serialised with toString(),
+   so it must not use anything from the editor. All user text is shown with textContent. */
+function playerMain() {
+  var cfg = JSON.parse(document.getElementById('cfg').textContent);
+  var L = cfg.look, tall = cfg.shape === 'tall', DW = tall ? 720 : 1280, DH = tall ? 1280 : 720, CTL = 56;
+  var scenes = cfg.scenes, n = scenes.length;
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('stage'), copy = $('copy'), kick = $('kick'), head = $('head'), sub = $('sub'), screen = $('screen'), cc = $('cc'), fill = $('fill'), playBtn = $('play');
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var r = document.documentElement.style;
+  r.setProperty('--bg1', L.bg1); r.setProperty('--bg2', L.bg2); r.setProperty('--ink', L.ink); r.setProperty('--muted', L.muted); r.setProperty('--accent', L.accent); r.setProperty('--accentInk', L.accentInk);
+  var style = ['animation', 'slides'].indexOf(cfg.style) >= 0 ? cfg.style : 'tello';
+  stage.className = (tall ? 'tall' : 'wide') + ' st-' + style;
+  stage.style.width = DW + 'px'; stage.style.height = DH + 'px';
+  var token = 0, idx = 0, playing = false, narrateOn = !!cfg.narrate && 'speechSynthesis' in window, ccOn = true, typer = null;
+
+  function fit() {
+    var s = Math.min(window.innerWidth / DW, (window.innerHeight - CTL) / DH);
+    stage.style.transform = 'scale(' + s + ')';
+    $('holder').style.width = Math.floor(DW * s) + 'px'; $('holder').style.height = Math.floor(DH * s) + 'px';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function restart(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function icon(kind) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('width', '1em'); s.setAttribute('height', '1em'); s.setAttribute('aria-hidden', 'true');
+    var p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor'); p.setAttribute('stroke-width', '3'); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round');
+    p.setAttribute('d', kind === 'check' ? 'M5 12.5l4.5 4.5L19 7.5' : 'M5 12h14M13 6l6 6-6 6'); s.appendChild(p); return s;
+  }
+  function typeInto(node, text, ms) {
+    clearInterval(typer); node.textContent = '';
+    if (reduce || cfg.still || !text) { node.textContent = text; return; }
+    var i = 0, step = Math.max(18, Math.floor(ms / Math.max(1, text.length)));
+    typer = setInterval(function () { i++; node.textContent = text.slice(0, i); if (i >= text.length) clearInterval(typer); }, step);
+  }
+
+  function buildScreen(s, i) {
+    screen.innerHTML = '';
+    var bar = el('div', 'appbar'); bar.appendChild(el('span', 'dot')); bar.appendChild(el('span', '', cfg.product)); screen.appendChild(bar);
+    if (s.kind === 'step' && s.img) {
+      var im = el('img', 'shotimg'); im.alt = ''; im.src = s.img; screen.appendChild(im);
+      screen.appendChild(el('div', 'chip float', 'Step ' + s.n + ' of ' + cfg.steps));
+      screen.appendChild(el('div', 'cap float2', s.title));
+      return;
+    }
+    var body = el('div', 'body'); screen.appendChild(body);
+    if (s.kind === 'hook') {
+      body.appendChild(el('div', 'chip', 'New'));
+      body.appendChild(el('div', 'big', cfg.feature));
+      body.appendChild(el('div', 'small', 'In this video'));
+      cfg.stepTitles.forEach(function (t, k) { var row = el('div', 'row'); row.style.animationDelay = (cfg.still ? 0 : 0.5 + k * 0.45) + 's'; row.appendChild(el('span', 'num', String(k + 1))); row.appendChild(el('span', '', t)); body.appendChild(row); });
+    } else if (s.kind === 'step') {
+      body.appendChild(el('div', 'chip', 'Step ' + s.n + ' of ' + cfg.steps));
+      body.appendChild(el('div', 'big', s.title));
+      var d = el('div', 'detail', ''); body.appendChild(d);
+      var b = el('div', 'pbtn'); b.appendChild(el('span', '', s.title)); b.appendChild(icon('arrow')); body.appendChild(b);
+      var dots = el('div', 'dots'); for (var k = 0; k < cfg.steps; k++) dots.appendChild(el('i', k < s.n ? 'on' : '')); body.appendChild(dots);
+      typeInto(d, s.detail, s.ms * 0.45);
+      if (!cfg.still) setTimeout(function () { if (b.isConnected) b.classList.add('tap'); }, Math.min(s.ms * 0.62, 4200)); else b.classList.add('tap');
+    } else {
+      body.appendChild(el('div', 'chip', 'Done'));
+      cfg.stepTitles.forEach(function (t, k) { var row = el('div', 'row done'); row.style.animationDelay = (cfg.still ? 0 : 0.2 + k * 0.3) + 's'; var c = el('span', 'num ok'); c.appendChild(icon('check')); row.appendChild(c); row.appendChild(el('span', '', t)); body.appendChild(row); });
+    }
+  }
+
+  function show(i) {
+    idx = i; var s = scenes[i];
+    kick.textContent = s.kick;
+    if (style === 'animation') { head.textContent = ''; s.head.split(/\s+/).forEach(function (w, k) { var sp = document.createElement('span'); sp.className = 'w'; sp.textContent = w; sp.style.animationDelay = (cfg.still ? 0 : 0.15 + k * 0.12) + 's'; head.appendChild(sp); head.appendChild(document.createTextNode(' ')); }); }
+    else head.textContent = s.head;
+    $('bignum').textContent = s.kind === 'step' ? (s.n < 10 ? '0' : '') + s.n : '';
+    sub.textContent = s.sub || ''; sub.style.display = s.sub ? '' : 'none';
+    var pill = $('pill'); pill.textContent = s.pill || ''; pill.style.display = s.pill ? '' : 'none';
+    var cr = $('credit'); cr.style.display = (s.kind === 'end' && cfg.credit) ? '' : 'none';
+    cc.textContent = s.say; cc.style.visibility = ccOn ? 'visible' : 'hidden';
+    fill.style.width = ((i + 1) / n * 100) + '%';
+    buildScreen(s, i);
+    if (!cfg.still) { restart(copy, 'in'); restart($('phone'), 'in'); } else { copy.className = 'in still'; $('phone').className = 'in still'; }
+  }
+
+  function say(i, my) {
+    return new Promise(function (resolve) {
+      var s = scenes[i], done = false, speaking = narrateOn;
+      var timer = setTimeout(fin, s.ms + (speaking ? 6000 : 0));
+      function fin() { if (done) return; done = true; clearTimeout(timer); setTimeout(resolve, 450); }
+      if (!speaking) return;
+      var floor = setTimeout(function () { floor = null; }, Math.min(s.ms, 2600));
+      try {
+        var u = new SpeechSynthesisUtterance(s.say);
+        var v = speechSynthesis.getVoices().filter(function (x) { return x.name === cfg.voice; })[0]; if (v) { u.voice = v; u.lang = v.lang; }
+        u.rate = cfg.rate || 1;
+        var end = function () { if (floor) { var wait = setInterval(function () { if (!floor) { clearInterval(wait); fin(); } }, 100); } else fin(); };
+        u.onend = end; u.onerror = end;
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      } catch (e) { /* the timer moves on */ }
+    });
+  }
+
+  async function play(from) {
+    var my = ++token; playing = true; setBtn();
+    for (var i = from; i < n; i++) { show(i); await say(i, my); if (my !== token) return; }
+    playing = false; idx = 0; setBtn(true);
+  }
+  function stop() { token++; playing = false; clearInterval(typer); try { speechSynthesis.cancel(); } catch (e) {} setBtn(); }
+  function setBtn(ended) { playBtn.textContent = playing ? 'Pause' : (ended ? 'Replay' : 'Play'); }
+  playBtn.addEventListener('click', function () { if (playing) stop(); else play(playBtn.textContent === 'Replay' ? 0 : idx); });
+  $('restart').addEventListener('click', function () { stop(); play(0); });
+  $('ccBtn').addEventListener('click', function () { ccOn = !ccOn; cc.style.visibility = ccOn ? 'visible' : 'hidden'; this.setAttribute('aria-pressed', String(ccOn)); });
+  var nb = $('narBtn');
+  if (!('speechSynthesis' in window) || !cfg.narrate) { nb.style.display = 'none'; narrateOn = false; }
+  nb.addEventListener('click', function () { narrateOn = !narrateOn; if (!narrateOn) { try { speechSynthesis.cancel(); } catch (e) {} } this.setAttribute('aria-pressed', String(narrateOn)); });
+  nb.setAttribute('aria-pressed', String(narrateOn));
+  $('fs').addEventListener('click', function () { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen(); });
+  document.addEventListener('fullscreenchange', function () { setTimeout(fit, 50); });
+  window.__show = function (i) { stop(); show(i); };
+  show(0); setBtn();
+}
+
+var PLAYER_CSS = '*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:#000;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}' +
+  '#holder{margin:0 auto;position:relative;overflow:hidden}#stage{position:absolute;left:0;top:0;transform-origin:0 0;background:linear-gradient(160deg,var(--bg1),var(--bg2));overflow:hidden}' +
+  '#copy{position:absolute;opacity:0}.wide #copy{left:84px;top:150px;width:600px}.tall #copy{left:60px;top:84px;width:600px}' +
+  '#copy.in{animation:cin .7s ease forwards}#copy.still,#phone.still{animation:none!important;opacity:1!important;transform:none!important}' +
+  '#kick{font-size:26px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:22px}' +
+  '#head{font-size:76px;line-height:1.05;font-weight:800;letter-spacing:-.02em}.tall #head{font-size:68px}' +
+  '#sub{font-size:32px;line-height:1.35;color:var(--muted);margin-top:24px}' +
+  '#pill{display:inline-block;margin-top:30px;background:var(--accent);color:var(--accentInk);font-weight:800;font-size:32px;padding:12px 26px;border-radius:999px}' +
+  '#credit{margin-top:34px;font-size:22px;color:var(--muted);letter-spacing:.04em}' +
+  '#phone{position:absolute;opacity:0;background:#0b0f14;border-radius:54px;padding:14px;box-shadow:0 40px 90px rgba(0,0,0,.45)}#phone.in{animation:pin .8s .15s ease forwards}' +
+  '.wide #phone{left:800px;top:50px;width:356px;height:620px}.tall #phone{left:185px;top:500px;width:350px;height:610px}' +
+  '#screen{position:relative;width:100%;height:100%;background:#fff;color:#13261f;border-radius:42px;overflow:hidden;display:flex;flex-direction:column}' +
+  '.appbar span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.appbar{display:flex;align-items:center;gap:10px;padding:22px 22px 14px;font-weight:700;font-size:20px;border-bottom:1px solid #e8ecea;flex:none}.appbar .dot{width:14px;height:14px;border-radius:50%;background:var(--accent)}' +
+  '.body{padding:20px 22px;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0}.chip{align-self:flex-start;background:#eef3ef;color:#2b4a3c;font-weight:700;font-size:16px;padding:6px 14px;border-radius:999px}' +
+  '.big{font-size:32px;line-height:1.12;font-weight:800;overflow-wrap:anywhere}.small{font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#6b7a72;font-weight:700;margin-top:4px}' +
+  '.detail{font-size:20px;line-height:1.4;color:#46544d;min-height:84px;overflow-wrap:anywhere}' +
+  '.row{display:flex;align-items:center;gap:12px;background:#f5f8f6;border-radius:14px;padding:12px 14px;font-size:18px;font-weight:600;opacity:0;animation:rin .5s ease forwards;overflow-wrap:anywhere}' +
+  '.num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accentInk);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}.num.ok{background:#1a7f4b;color:#fff}.num svg{width:18px;height:18px}' +
+  '.pbtn{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent);color:var(--accentInk);font-weight:800;font-size:20px;padding:16px 18px;border-radius:16px;position:relative}.pbtn svg{width:22px;height:22px;flex:none}' +
+  '.pbtn.tap{animation:tap 1s ease 2}.dots{display:flex;gap:8px;justify-content:center;padding-top:4px}.dots i{width:10px;height:10px;border-radius:50%;background:#d6ddd9}.dots i.on{background:var(--accent)}' +
+  '.shotimg{flex:1;min-height:0;width:100%;object-fit:cover;animation:zoom 14s ease-out forwards}.float{position:absolute;left:18px;top:84px}.float2{position:absolute;left:14px;right:14px;bottom:16px;background:rgba(10,20,30,.82);color:#fff;font-weight:700;font-size:20px;padding:12px 14px;border-radius:14px;overflow-wrap:anywhere}' +
+  '#cc{position:absolute;left:60px;right:60px;bottom:44px;text-align:center;font-size:26px;line-height:1.35;color:var(--ink);background:rgba(0,0,0,.28);padding:10px 16px;border-radius:12px;max-height:130px;overflow:hidden}.wide #cc{right:520px;text-align:left;bottom:36px;font-size:24px}.tall #cc{bottom:26px;font-size:24px;left:40px;right:40px}' +
+  '#bar{position:absolute;left:0;right:0;bottom:0;height:8px;background:rgba(255,255,255,.15)}#fill{display:block;height:100%;width:0;background:var(--accent);transition:width .6s ease}' +
+  '#ctl{height:56px;display:flex;gap:8px;align-items:center;justify-content:center;background:#0a1018;padding:0 8px}#ctl button{white-space:nowrap;font:inherit;font-size:14px;font-weight:700;color:#e8e0d0;background:transparent;border:1px solid #3a4756;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}#ctl button:hover{background:#1a2430}#ctl #play{background:#e8955a;color:#1a1008;border-color:#e8955a;min-width:84px}#ctl button[aria-pressed=false]{opacity:.55}' +
+  '@keyframes cin{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}@keyframes pin{from{opacity:0;transform:translateY(70px)}to{opacity:1;transform:none}}@keyframes rin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}' +
+  '@keyframes tap{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 0 12px rgba(232,149,90,.35);transform:scale(.985)}}@keyframes zoom{from{transform:scale(1)}to{transform:scale(1.08)}}' +
+  '#stage.st-slides #phone,#stage.st-animation #phone{display:none}' +
+  '#stage.st-slides #copy{left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 130px 90px 150px}#stage.st-slides.tall #copy{padding:0 70px 170px 100px}' +
+  '#stage.st-slides #copy::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:var(--accent)}' +
+  '#stage.st-slides #head{font-size:88px}#stage.st-slides.tall #head{font-size:78px}#stage.st-slides #sub{font-size:38px;max-width:900px}' +
+  '#bignum{display:none;position:absolute;right:60px;bottom:50px;font-size:340px;font-weight:900;color:var(--accent);opacity:.14;line-height:1}#stage.st-slides #bignum{display:block}#stage.st-slides.tall #bignum{bottom:150px;font-size:300px}' +
+  '#stage.st-slides.wide #cc{left:150px;right:150px;text-align:left}#stage.st-slides.tall #cc{left:100px;right:60px}#stage.st-slides #copy.in{animation:sin .6s ease forwards}' +
+  '.blob{display:none;position:absolute;border-radius:50%;background:var(--accent);opacity:.26}#stage.st-animation .blob{display:block}' +
+  '.b1{width:440px;height:440px;left:-130px;top:-150px;animation:fl1 9s ease-in-out infinite}.b2{width:320px;height:320px;right:-90px;bottom:90px;background:#fff;opacity:.11;animation:fl2 11s ease-in-out infinite}.b3{width:170px;height:170px;right:240px;top:80px;animation:fl2 7s ease-in-out infinite reverse}' +
+  '#stage.st-animation #copy{left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 110px 80px}' +
+  '#stage.st-animation #head{font-size:100px}#stage.st-animation.tall #head{font-size:88px}#stage.st-animation #sub{max-width:900px}#stage.st-animation #cc{left:110px;right:110px;text-align:center}' +
+  '.w{display:inline-block;opacity:0;transform:translateY(46px) scale(.88);animation:wp .55s cubic-bezier(.2,1.5,.4,1) forwards}#copy.still .w{animation:none;opacity:1;transform:none}' +
+  '@keyframes wp{to{opacity:1;transform:none}}@keyframes sin{from{opacity:0;transform:translateX(90px)}to{opacity:1;transform:none}}@keyframes fl1{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,50px)}}@keyframes fl2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,-45px)}}' +
+  '@media (max-width:360px){#ctl button{padding:6px 5px;font-size:11px}}@media (max-width:420px){#ctl{gap:4px}#ctl button{padding:6px 8px;font-size:12px}#ctl #play{min-width:64px}}' +
+  '@media (prefers-reduced-motion:reduce){#copy,#phone,.row,.w{animation:none!important;opacity:1!important;transform:none!important}}';
+
+function buildVideoHtml(cfg) {
+  var json = JSON.stringify(cfg).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  var title = (cfg.feature + ' | ' + cfg.product).replace(/[<>&"]/g, '');
+  return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + title + '</title><style>' + PLAYER_CSS + '</style></head><body>' +
+    '<div id="holder"><div id="stage"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><div id="bignum"></div><div id="copy"><div id="kick"></div><h1 id="head"></h1><p id="sub"></p><span id="pill"></span><div id="credit">Made with ownsite.app</div></div>' +
+    '<div id="phone"><div id="screen"></div></div><div id="cc"></div><div id="bar"><i id="fill"></i></div></div></div>' +
+    '<div id="ctl"><button id="play" type="button">Play</button><button id="restart" type="button">Restart</button><button id="ccBtn" type="button" aria-pressed="true">Captions</button><button id="narBtn" type="button">Voice</button><button id="fs" type="button">Full screen</button></div>' +
+    '<script id="cfg" type="application/json">' + json + '</scr' + 'ipt><script>(' + playerMain.toString() + ')();</scr' + 'ipt></body></html>';
+}
+
+
+/* ───────────────────────── Chat ───────────────────────── */
+var $ = function (id) { return document.getElementById(id); };
+var col = $('col'), log = $('log'), box = $('msg'), sendBtn = $('send');
+var convo = [], current = null, lastLink = '', busy = false;
+var STYLES = [['tello', 'Like Tello', 'A phone walkthrough with captions, like a product demo.'], ['animation', 'Animation', 'Big moving words and shapes.'], ['slides', 'Slides', 'Clean slides with big step numbers.']];
+var prefs = { style: 'tello', shape: 'wide', look: 'ocean', voice: true };
+try { var sv = JSON.parse(localStorage.getItem('ownsite_vprefs') || '{}'); ['style', 'shape', 'look'].forEach(function (k) { if (sv[k]) prefs[k] = sv[k]; }); if (sv.voice === false) prefs.voice = false; } catch (e) {}
+if (!STYLES.some(function (x) { return x[0] === prefs.style; })) prefs.style = 'tello';
+if (prefs.shape !== 'tall') prefs.shape = 'wide';
+if (!LOOKS[prefs.look]) prefs.look = 'ocean';
+function savePrefs() { try { localStorage.setItem('ownsite_vprefs', JSON.stringify(prefs)); } catch (e) {} }
+var EXAMPLE = 'A short video that shows what Tello does for landlords. https://ecrentalpm.com/features/tello';
+
+function scrollDown() { log.scrollTop = log.scrollHeight; }
+function addMsg(role, text, cls) {
+  var m = document.createElement('div'); m.className = 'msg ' + (role === 'me' ? 'me' : 'ai');
+  var w = document.createElement('div'); w.className = 'who'; w.textContent = role === 'me' ? 'You' : 'OwnSite'; m.appendChild(w);
+  var b = document.createElement('div'); b.className = 'bubble' + (cls ? ' ' + cls : ''); b.textContent = text; m.appendChild(b);
+  col.appendChild(m); scrollDown(); return m;
+}
+function addChips(parent, items) {
+  var c = document.createElement('div'); c.className = 'chips';
+  items.forEach(function (it) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = it[0]; b.addEventListener('click', function () { if (!busy) send(it[1]); }); c.appendChild(b); });
+  parent.appendChild(c); return c;
+}
+
+function words(s) { return (s.match(/\S+/g) || []).length; }
+function ms(say) { return Math.round(Math.min(12, Math.max(3.6, words(say) / 2.4 + 1.4)) * 1000); }
+function cfgFromSpec(v) {
+  var steps = v.steps, hook = v.hook || ('Meet ' + v.feature + '.'), scenes = [];
+  var hookSay = hook + (v.tagline ? ' ' + v.tagline : '');
+  scenes.push({ kind: 'hook', kick: v.product, head: hook, sub: v.tagline, say: hookSay, ms: ms(hookSay) });
+  steps.forEach(function (s, i) { var say = 'Step ' + (i + 1) + '. ' + s.title + (/[.!?]$/.test(s.title) ? '' : '.') + (s.detail ? ' ' + s.detail : ''); scenes.push({ kind: 'step', n: i + 1, kick: 'Step ' + (i + 1) + ' of ' + steps.length, head: s.title, sub: s.detail, say: say, img: '', title: s.title, detail: s.detail, ms: ms(say) }); });
+  var endSay = v.cta + (v.url ? ' Visit ' + v.url + '.' : '');
+  scenes.push({ kind: 'end', kick: v.product, head: v.cta, sub: '', pill: v.url, say: endSay, ms: ms(endSay) });
+  return { product: v.product, feature: v.feature, shape: v.shape, style: v.style || 'tello', look: LOOKS[v.look] || LOOKS.ocean, narrate: prefs.voice !== false, voice: '', rate: 1, credit: true, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes };
+}
+
+function addVideo(v, m) {
+  var html = buildVideoHtml(cfgFromSpec(v)), tall = v.shape === 'tall';
+  var card = document.createElement('div'); card.className = 'vcard';
+  var pv = document.createElement('div'); pv.className = 'pvBox' + (tall ? ' v' : '');
+  var f = document.createElement('iframe'); f.title = v.feature + ' video'; f.setAttribute('allow', 'fullscreen; autoplay'); pv.appendChild(f); card.appendChild(pv);
+  m.appendChild(card);
+  var w = Math.min(tall ? 320 : 560, col.clientWidth - 8);
+  pv.style.height = Math.round(w * (tall ? 1280 / 720 : 720 / 1280) + 56) + 'px'; pv.style.width = w + 'px';
+  f.srcdoc = html;
+  var act = document.createElement('div'); act.className = 'vact';
+  var dl = document.createElement('button'); dl.type = 'button'; dl.className = 'btn solid'; dl.textContent = 'Download HTML';
+  dl.addEventListener('click', function () {
+    var a = document.createElement('a'), url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.href = url; a.download = (v.feature.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'video') + '-video.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  });
+  act.appendChild(dl); m.appendChild(act);
+  var tip = document.createElement('p'); tip.className = 'hint'; tip.textContent = 'Press Play in the video. Sound starts after you press Play.'; m.appendChild(tip);
+  var others = STYLES.filter(function (x) { return x[0] !== (v.style || 'tello'); });
+  var q = document.createElement('p'); q.className = 'hint'; q.textContent = 'Like it? Try another style:'; m.appendChild(q);
+  var sc = document.createElement('div'); sc.className = 'chips';
+  others.forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = x[1]; b.addEventListener('click', function () { if (!busy) setPref('style', x[0]); }); sc.appendChild(b); });
+  m.appendChild(sc);
+  addChips(m, [['Make it shorter', 'Make it shorter.'], [tall ? 'Make it wide' : 'Make it vertical', tall ? 'Make it wide.' : 'Make it vertical for TikTok.'], ['Different look', 'Use a different look.'], ['Change the ending', 'Change the ending to: ']]);
+  scrollDown();
+}
+
+function setBusy(b) { busy = b; sendBtn.disabled = b; box.disabled = b; }
+
+async function send(text) {
+  text = String(text || '').trim(); if (!text || busy) return;
+  if (/:\s*$/.test(text)) { box.value = text; box.focus(); return; } // a chip that needs a few more words
+  addMsg('me', text); box.value = ''; box.style.height = ''; convo.push({ role: 'user', content: text });
+  setBusy(true);
+  var wait = addMsg('ai', ''); var bub = wait.querySelector('.bubble'); bub.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+  try {
+    var r = await fetch('/api/video-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: convo.slice(-8), video: current, lastLink: lastLink, prefs: { style: prefs.style, shape: prefs.shape, look: prefs.look } }) });
+    var d = await r.json().catch(function () { return {}; });
+    wait.remove();
+    if (!r.ok || !d.video) { addMsg('ai', d.error || 'I could not make that just now. Please try again.', 'err'); convo.pop(); }
+    else {
+      current = d.video; lastLink = d.link || lastLink;
+      ['style', 'shape', 'look'].forEach(function (k) { if (d.video[k]) prefs[k] = d.video[k]; }); savePrefs(); renderMenu();
+      convo.push({ role: 'assistant', content: d.reply || 'Here is your video.' });
+      addVideo(d.video, addMsg('ai', d.reply || 'Here is your video.'));
+    }
+  } catch (e) {
+    wait.remove(); convo.pop(); addMsg('ai', 'I could not reach the video maker. Check your connection and try again.', 'err');
+  }
+  setBusy(false); box.focus();
+}
+
+/* ───────────────────────── Slide menu ───────────────────────── */
+var menuEl = $('menu'), ovl = $('ovl'), menuBtn = $('menuBtn');
+function openMenu(o) {
+  menuEl.classList.toggle('on', o); ovl.classList.toggle('on', o);
+  menuEl.setAttribute('aria-hidden', String(!o)); menuBtn.setAttribute('aria-expanded', String(o));
+  if (o) { var f = menuEl.querySelector('button'); if (f) f.focus(); } else menuBtn.focus();
+}
+function optBtn(title, sub, on, fn) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(on));
+  var t = document.createElement('b'); t.textContent = title; b.appendChild(t);
+  if (sub) { var sm = document.createElement('small'); sm.textContent = sub; b.appendChild(sm); }
+  b.addEventListener('click', fn); return b;
+}
+function renderMenu() {
+  var a = $('mStyle'), b = $('mShape'), c = $('mLook'); a.textContent = ''; b.textContent = ''; c.textContent = '';
+  STYLES.forEach(function (x) { a.appendChild(optBtn(x[1], x[2], prefs.style === x[0], function () { setPref('style', x[0]); })); });
+  [['wide', 'Wide'], ['tall', 'Vertical']].forEach(function (x) { b.appendChild(optBtn(x[1], '', prefs.shape === x[0], function () { setPref('shape', x[0]); })); });
+  Object.keys(LOOKS).forEach(function (k) {
+    var L = LOOKS[k], s = document.createElement('button'); s.type = 'button'; s.className = 'sw'; s.title = L.name; s.setAttribute('aria-label', L.name + ' look'); s.setAttribute('aria-pressed', String(prefs.look === k));
+    s.style.background = 'linear-gradient(135deg,' + L.bg1 + ',' + L.bg2 + ')';
+    var i = document.createElement('i'); i.style.background = L.accent; s.appendChild(i);
+    s.addEventListener('click', function () { setPref('look', k); }); c.appendChild(s);
+  });
+  $('mVoice').setAttribute('aria-pressed', String(prefs.voice)); $('mVoiceState').textContent = prefs.voice ? 'On' : 'Off';
+}
+var NAMES = { style: { tello: 'the Tello style', animation: 'the animation style', slides: 'the slides style' }, shape: { wide: 'wide', tall: 'vertical' } };
+function setPref(k, val) {
+  if (prefs[k] === val) { openMenu(false); return; }
+  prefs[k] = val; savePrefs(); renderMenu(); openMenu(false);
+  if (!current) { addMsg('ai', 'Got it. I will use ' + (k === 'look' ? LOOKS[val].name + ' colors' : NAMES[k][val]) + ' for your video. Now tell me what it is for and paste your website link.'); return; }
+  current[k] = val; // redraw the same script locally, no new AI call
+  addVideo(current, addMsg('ai', 'Switched to ' + (k === 'look' ? LOOKS[val].name + ' colors' : NAMES[k][val]) + '. Here it is. Do you like it? You can switch again from the menu.'));
+}
+menuBtn.addEventListener('click', function () { openMenu(true); });
+$('menuX').addEventListener('click', function () { openMenu(false); });
+ovl.addEventListener('click', function () { openMenu(false); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menuEl.classList.contains('on')) openMenu(false); });
+$('mVoice').addEventListener('click', function () { prefs.voice = !prefs.voice; savePrefs(); renderMenu(); });
+$('mNew').addEventListener('click', function () { convo = []; current = null; lastLink = ''; col.textContent = ''; openMenu(false); var h = addMsg('ai', 'Fresh start. Tell me what the video is for in a few words, and paste your website link.'); addChips(h, [['Try an example', EXAMPLE]]); });
+renderMenu();
+
+$('form').addEventListener('submit', function (e) { e.preventDefault(); send(box.value); });
+box.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(box.value); } });
+box.addEventListener('input', function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 140) + 'px'; });
+
+var hi = addMsg('ai', 'Hi! I make short narrated videos.\n\nTell me what it is for in a few words, and paste your website link. I will write it and build it for you. You can then ask me to change anything, just like a normal chat.');
+addChips(hi, [['Try an example', EXAMPLE]]);
+window.__vc = { cfgFromSpec: cfgFromSpec, buildVideoHtml: buildVideoHtml };
+</script>
+</body>
+</html>
