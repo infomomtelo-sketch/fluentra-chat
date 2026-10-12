@@ -3,78 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Feature Video Maker — OwnSite</title>
+<title>Video Maker Chat — OwnSite</title>
 <link rel="canonical" href="https://ownsite.app/feature-video">
-<meta name="description" content="Make a short narrated how-to video for any feature of your app or site. Free, runs in your browser, nothing is uploaded. Download it as one HTML file you own.">
+<meta name="description" content="Tell the chat a few words and paste your website link. Get a short narrated video you can play, share or download. Free.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OwnSite">
-<meta property="og:title" content="Feature Video Maker — OwnSite">
-<meta property="og:description" content="Type a feature and its steps. Get a narrated, animated how-to video you can play, share or download. Free.">
+<meta property="og:title" content="Video Maker Chat — OwnSite">
+<meta property="og:description" content="Type a few words and your link. Get a short narrated video. Free.">
 <meta property="og:url" content="https://ownsite.app/feature-video">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0a1628">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-:root { --deep:#0a1628; --mid:#0d2040; --surf:#1a3a5c; --text:#e8e0d0; --text2:#c2b4a0; --text3:#9a8c7c; --amber:#d4905a; --amber2:#e8a870; --line:rgba(212,144,90,0.25); --panel:rgba(8,16,28,0.72); --err:#ff8a7a; }
+:root { --deep:#0a1628; --text:#e8e0d0; --text2:#c2b4a0; --text3:#9a8c7c; --amber:#d4905a; --amber2:#e8a870; --line:rgba(212,144,90,0.25); --panel:rgba(8,16,28,0.72); --err:#ff8a7a; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
-html { background: var(--deep); }
-body { font-family: 'Share Tech Mono', ui-monospace, Menlo, Consolas, monospace; color: var(--text); min-height: 100vh; line-height: 1.55; background: linear-gradient(180deg, #1a2840 0%, #0d2040 40%, #081820 100%); background-attachment: fixed; }
+html, body { height: 100%; background: var(--deep); }
+body { font-family: 'Share Tech Mono', ui-monospace, Menlo, Consolas, monospace; color: var(--text); line-height: 1.55; display: flex; flex-direction: column; background: linear-gradient(180deg, #1a2840 0%, #0d2040 40%, #081820 100%); background-attachment: fixed; }
 a { color: var(--amber2); }
-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
-.logo { color: var(--amber); letter-spacing: 4px; text-transform: uppercase; text-decoration: none; font-size: 17px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex: none; }
+.logo { color: var(--amber); letter-spacing: 4px; text-transform: uppercase; text-decoration: none; font-size: 16px; }
 .back { color: var(--text3); text-decoration: none; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; border: 1px solid var(--line); padding: 6px 12px; }
 .back:hover { color: var(--amber); }
-main { max-width: 1180px; margin: 0 auto; padding: 28px 16px 56px; }
-h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; margin-bottom: 10px; }
-h1 span { color: var(--amber); }
-.lede { color: var(--text2); max-width: 680px; margin-bottom: 26px; }
-.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-@media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
-.card { background: var(--panel); border: 1px solid var(--line); padding: 18px; }
-.card h2 { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; font-weight: 400; }
-label { display: block; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin: 12px 0 5px; }
-label .opt { text-transform: none; letter-spacing: 0; opacity: 0.8; }
-input[type=text], textarea, select { width: 100%; font: inherit; font-size: 14px; color: var(--text); background: rgba(0,0,0,0.4); border: 1px solid var(--line); padding: 9px 10px; border-radius: 0; }
-textarea { resize: vertical; }
-input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
-.step { border: 1px solid var(--line); padding: 12px; margin-top: 12px; background: rgba(0,0,0,0.25); }
-.step-head { display: flex; align-items: center; justify-content: space-between; color: var(--amber2); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
-.step label:first-of-type { margin-top: 8px; }
-.shot { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-.shot img { width: 44px; height: 78px; object-fit: cover; border: 1px solid var(--line); }
-.shot input[type=file] { font: inherit; font-size: 12px; color: var(--text3); max-width: 100%; }
-.btn { font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; padding: 10px 16px; border: 1px solid var(--amber); background: var(--amber); color: #1a1008; border-radius: 0; }
-.btn:hover { background: var(--amber2); }
-.btn.ghost { background: transparent; color: var(--amber2); }
-.btn.ghost:hover { background: rgba(212,144,90,0.12); }
-.btn.small { padding: 5px 10px; font-size: 11px; }
-.btn:disabled { opacity: 0.5; cursor: default; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-.seg { display: flex; gap: 8px; flex-wrap: wrap; }
-.seg label { display: flex; align-items: center; gap: 7px; margin: 0; padding: 8px 12px; border: 1px solid var(--line); cursor: pointer; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--text); }
-.seg input { accent-color: var(--amber); }
-.seg label:has(input:checked) { border-color: var(--amber); background: rgba(212,144,90,0.12); }
-.looks { display: flex; gap: 10px; flex-wrap: wrap; }
-.look { width: 62px; height: 40px; border: 2px solid transparent; cursor: pointer; padding: 0; position: relative; }
-.look[aria-pressed=true] { border-color: var(--amber2); }
-.look i { position: absolute; right: 4px; bottom: 4px; width: 12px; height: 12px; border-radius: 50%; }
-.check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--text); text-transform: none; letter-spacing: 0; }
-.check input { accent-color: var(--amber); width: 16px; height: 16px; }
-.err { color: var(--err); margin-top: 12px; font-size: 14px; min-height: 1.2em; }
-.note { color: var(--text3); font-size: 12px; margin-top: 12px; line-height: 1.6; }
-.stage-wrap { position: sticky; top: 12px; }
-@media (max-width: 880px) { .stage-wrap { position: static; } }
-#pvBox { margin: 0 auto; width: 100%; max-width: 560px; border: 1px solid var(--line); background: #000; }
-#pvBox.v { max-width: 340px; }
-#pv { width: 100%; height: 100%; border: 0; display: block; }
-.empty { color: var(--text3); text-align: center; padding: 30px 10px; border: 1px dashed var(--line); font-size: 14px; }
-.how { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
-.how div { border: 1px solid var(--line); padding: 14px; background: var(--panel); font-size: 14px; color: var(--text2); }
-.how b { display: block; color: var(--amber2); margin-bottom: 4px; font-weight: 400; letter-spacing: 1px; }
-footer { text-align: center; color: var(--text3); font-size: 12px; padding: 0 16px 36px; }
+#log { flex: 1; overflow-y: auto; padding: 18px 14px 8px; }
+.col { max-width: 720px; margin: 0 auto; }
+.msg { margin-bottom: 16px; display: flex; flex-direction: column; }
+.msg.me { align-items: flex-end; }
+.who { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.msg.ai .who { color: var(--amber); }
+.bubble { max-width: 92%; padding: 10px 14px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.me .bubble { border-color: rgba(232,168,112,0.55); background: rgba(212,144,90,0.1); }
+.msg.ai .bubble { border-left: 2px solid var(--amber); }
+.bubble.err { border-color: var(--err); color: var(--err); }
+.dots span { display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: var(--amber); opacity: 0.3; animation: dot 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: .2s; } .dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes dot { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+.vcard { margin-top: 10px; width: 100%; max-width: 560px; }
+.pvBox { width: 100%; border: 1px solid var(--line); background: #000; }
+.pvBox.v { max-width: 320px; }
+.pvBox iframe { width: 100%; height: 100%; border: 0; display: block; }
+.vact { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.chip, .btn { font: inherit; font-size: 12px; letter-spacing: 1px; cursor: pointer; padding: 7px 12px; border: 1px solid var(--amber); background: transparent; color: var(--amber2); border-radius: 0; text-transform: uppercase; }
+.chip:hover, .btn:hover { background: rgba(212,144,90,0.14); }
+.btn.solid { background: var(--amber); color: #1a1008; }
+.btn.solid:hover { background: var(--amber2); }
+.chip:disabled { opacity: .5; cursor: default; }
+#bar { flex: none; border-top: 1px solid var(--line); background: var(--panel); padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); }
+#form { display: flex; gap: 8px; align-items: flex-end; }
+#msg { flex: 1; font: inherit; font-size: 16px; color: var(--text); background: rgba(0,0,0,0.45); border: 1px solid var(--line); padding: 10px 12px; resize: none; max-height: 140px; border-radius: 0; }
+#msg:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+#send { font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; padding: 12px 16px; border: 1px solid var(--amber); background: var(--amber); color: #1a1008; border-radius: 0; }
+#send:disabled { opacity: .5; cursor: default; }
+.hint { font-size: 12px; color: var(--text3); margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -82,72 +63,14 @@ footer { text-align: center; color: var(--text3); font-size: 12px; padding: 0 16
   <a class="logo" href="/">OwnSite</a>
   <a class="back" href="/">Back to builder</a>
 </header>
-<main>
-  <h1>Feature video <span>maker</span></h1>
-  <p class="lede">Type a feature and its steps. Get a short narrated how-to video you can play, share or download as one HTML file you own. It is free, it runs in your browser, and nothing you type or upload leaves your device.</p>
-
-  <div class="grid">
-    <section class="card" aria-label="Video details">
-      <h2>1. The feature</h2>
-      <div class="row2">
-        <div><label for="product">Product or app name</label><input type="text" id="product" maxlength="40" placeholder="Acme Planner" autocomplete="off"></div>
-        <div><label for="feature">Feature name</label><input type="text" id="feature" maxlength="50" placeholder="Shared calendars" autocomplete="off"></div>
-      </div>
-      <label for="hook">Opening line <span class="opt">(optional)</span></label>
-      <input type="text" id="hook" maxlength="80" placeholder="Planning with your team just got easier." autocomplete="off">
-      <label for="tagline">One-line summary <span class="opt">(optional)</span></label>
-      <input type="text" id="tagline" maxlength="110" placeholder="Share a calendar with anyone in three taps." autocomplete="off">
-
-      <h2 style="margin-top:22px">2. The steps</h2>
-      <div id="steps"></div>
-      <div class="actions" style="margin-top:12px"><button type="button" class="btn ghost small" id="addStep">+ Add a step</button><button type="button" class="btn ghost small" id="example">Try an example</button></div>
-
-      <h2 style="margin-top:22px">3. The ending</h2>
-      <div class="row2">
-        <div><label for="cta">Call to action</label><input type="text" id="cta" maxlength="80" placeholder="Try it free today." autocomplete="off"></div>
-        <div><label for="url">Web address <span class="opt">(optional)</span></label><input type="text" id="url" maxlength="80" placeholder="acme.example.com" autocomplete="off"></div>
-      </div>
-
-      <h2 style="margin-top:22px">4. Look and sound</h2>
-      <label>Shape</label>
-      <div class="seg" role="radiogroup" aria-label="Video shape">
-        <label><input type="radio" name="shape" value="wide" checked> Wide 16:9</label>
-        <label><input type="radio" name="shape" value="tall"> Vertical 9:16</label>
-      </div>
-      <label>Look</label>
-      <div class="looks" id="looks"></div>
-      <label class="check" style="margin-top:16px"><input type="checkbox" id="narrate" checked> Spoken narration (uses your device voice)</label>
-      <div class="row2" id="voiceRow">
-        <div><label for="voice">Voice</label><select id="voice"></select></div>
-        <div><label for="rate">Speed</label><select id="rate"><option value="0.9">Slower</option><option value="1" selected>Normal</option><option value="1.12">Faster</option></select></div>
-      </div>
-      <label class="check"><input type="checkbox" id="credit" checked> Add "Made with ownsite.app" on the last scene</label>
-
-      <div class="err" id="err" role="alert"></div>
-      <div class="actions">
-        <button type="button" class="btn" id="make">Make my video</button>
-        <button type="button" class="btn ghost" id="download" disabled>Download HTML</button>
-      </div>
-      <p class="note">Screenshots are optional. Use pictures of your own app, and leave out anything private such as other people's names, emails or account numbers. To get an MP4, play the video full screen and screen-record it with your phone or computer.</p>
-    </section>
-
-    <aside class="stage-wrap" aria-label="Preview">
-      <div class="card">
-        <h2>Preview</h2>
-        <div class="empty" id="empty">Fill in the product, the feature and at least two steps, then press Make my video.</div>
-        <div id="pvBox" hidden><iframe id="pv" title="Video preview" allow="fullscreen; autoplay"></iframe></div>
-        <p class="note" id="pvNote" hidden>Press Play inside the video. Narration needs a click first, because browsers block sound until you interact. Use the full screen button for recording.</p>
-      </div>
-    </aside>
-  </div>
-
-  <div class="how">
-    <div><b>Plain HTML</b>The download is one file with no tracking and no account. Put it on your own site or open it from your computer.</div>
-    <div><b>Your words</b>The video says exactly what you type. Nothing is rewritten and no AI is used, so it costs no tokens.</div>
-    <div><b>Need a custom video?</b>For a polished, voiced MP4 made for you, use the request form at <a href="https://ecrentalpm.com/videos" target="_blank" rel="noopener noreferrer">ecrentalpm.com/videos</a>.</div>
-  </div>
-</main>
-<footer>OwnSite · Build your site. Own your code.</footer>
+<div id="log" aria-live="polite"><div class="col" id="col"></div></div>
+<div id="bar"><div class="col">
+  <form id="form" autocomplete="off">
+    <textarea id="msg" rows="2" maxlength="1200" placeholder="A few words about the video, and your website link" aria-label="Message"></textarea>
+    <button id="send" type="submit">Send</button>
+  </form>
+  <p class="hint">Free. The link is only read to write your video, and nothing is saved. Need a polished MP4 made for you? <a href="https://ecrentalpm.com/videos" target="_blank" rel="noopener noreferrer">See samples and request one</a>.</p>
+</div></div>
 
 <script>
 'use strict';
@@ -298,10 +221,10 @@ var PLAYER_CSS = '*{box-sizing:border-box;margin:0;padding:0}html,body{height:10
   '.shotimg{flex:1;min-height:0;width:100%;object-fit:cover;animation:zoom 14s ease-out forwards}.float{position:absolute;left:18px;top:84px}.float2{position:absolute;left:14px;right:14px;bottom:16px;background:rgba(10,20,30,.82);color:#fff;font-weight:700;font-size:20px;padding:12px 14px;border-radius:14px;overflow-wrap:anywhere}' +
   '#cc{position:absolute;left:60px;right:60px;bottom:44px;text-align:center;font-size:26px;line-height:1.35;color:var(--ink);background:rgba(0,0,0,.28);padding:10px 16px;border-radius:12px;max-height:130px;overflow:hidden}.wide #cc{right:520px;text-align:left;bottom:36px;font-size:24px}.tall #cc{bottom:26px;font-size:24px;left:40px;right:40px}' +
   '#bar{position:absolute;left:0;right:0;bottom:0;height:8px;background:rgba(255,255,255,.15)}#fill{display:block;height:100%;width:0;background:var(--accent);transition:width .6s ease}' +
-  '#ctl{height:56px;display:flex;gap:8px;align-items:center;justify-content:center;background:#0a1018;padding:0 8px}#ctl button{font:inherit;font-size:14px;font-weight:700;color:#e8e0d0;background:transparent;border:1px solid #3a4756;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}#ctl button:hover{background:#1a2430}#ctl #play{background:#e8955a;color:#1a1008;border-color:#e8955a;min-width:84px}#ctl button[aria-pressed=false]{opacity:.55}' +
+  '#ctl{height:56px;display:flex;gap:8px;align-items:center;justify-content:center;background:#0a1018;padding:0 8px}#ctl button{white-space:nowrap;font:inherit;font-size:14px;font-weight:700;color:#e8e0d0;background:transparent;border:1px solid #3a4756;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}#ctl button:hover{background:#1a2430}#ctl #play{background:#e8955a;color:#1a1008;border-color:#e8955a;min-width:84px}#ctl button[aria-pressed=false]{opacity:.55}' +
   '@keyframes cin{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}@keyframes pin{from{opacity:0;transform:translateY(70px)}to{opacity:1;transform:none}}@keyframes rin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}' +
   '@keyframes tap{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 0 12px rgba(232,149,90,.35);transform:scale(.985)}}@keyframes zoom{from{transform:scale(1)}to{transform:scale(1.08)}}' +
-  '@media (max-width:420px){#ctl{gap:4px}#ctl button{padding:6px 8px;font-size:12px}#ctl #play{min-width:64px}}' +
+  '@media (max-width:360px){#ctl button{padding:6px 5px;font-size:11px}}@media (max-width:420px){#ctl{gap:4px}#ctl button{padding:6px 8px;font-size:12px}#ctl #play{min-width:64px}}' +
   '@media (prefers-reduced-motion:reduce){#copy,#phone,.row{animation:none!important;opacity:1!important;transform:none!important}}';
 
 function buildVideoHtml(cfg) {
@@ -314,152 +237,90 @@ function buildVideoHtml(cfg) {
     '<script id="cfg" type="application/json">' + json + '</scr' + 'ipt><script>(' + playerMain.toString() + ')();</scr' + 'ipt></body></html>';
 }
 
-/* ───────────────────────── Editor ───────────────────────── */
-var MAX_STEPS = 6, MIN_STEPS = 2;
-var state = { steps: [], look: 'ocean' };
+
+/* ───────────────────────── Chat ───────────────────────── */
 var $ = function (id) { return document.getElementById(id); };
-var lastHtml = '', lastName = 'feature-video';
+var col = $('col'), log = $('log'), box = $('msg'), sendBtn = $('send');
+var convo = [], current = null, lastLink = '', busy = false;
+var EXAMPLE = 'A short video that shows what Tello does for landlords. https://ecrentalpm.com/features/tello';
 
-function clean(s, max) { return String(s || '').replace(/\s+/g, ' ').trim().slice(0, max); }
-function newStep() { return { title: '', detail: '', img: '' }; }
-
-function renderSteps() {
-  var box = $('steps'); box.innerHTML = '';
-  state.steps.forEach(function (st, i) {
-    var d = document.createElement('div'); d.className = 'step';
-    var head = document.createElement('div'); head.className = 'step-head';
-    var h = document.createElement('span'); h.textContent = 'Step ' + (i + 1); head.appendChild(h);
-    if (state.steps.length > MIN_STEPS) { var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'btn ghost small'; rm.textContent = 'Remove'; rm.addEventListener('click', function () { state.steps.splice(i, 1); renderSteps(); saveDraft(); }); head.appendChild(rm); }
-    d.appendChild(head);
-    var l1 = document.createElement('label'); l1.textContent = 'What the user does'; l1.htmlFor = 'st-t' + i; d.appendChild(l1);
-    var t = document.createElement('input'); t.type = 'text'; t.id = 'st-t' + i; t.maxLength = 60; t.value = st.title; t.placeholder = i === 0 ? 'Open the Calendar tab' : 'Short action, like "Tap Share"'; t.autocomplete = 'off';
-    t.addEventListener('input', function () { st.title = t.value; saveDraft(); }); d.appendChild(t);
-    var l2 = document.createElement('label'); l2.innerHTML = 'One sentence of detail <span class="opt">(optional)</span>'; l2.htmlFor = 'st-d' + i; d.appendChild(l2);
-    var x = document.createElement('textarea'); x.id = 'st-d' + i; x.rows = 2; x.maxLength = 160; x.value = st.detail; x.placeholder = 'Why or how, in plain words.';
-    x.addEventListener('input', function () { st.detail = x.value; saveDraft(); }); d.appendChild(x);
-    var shot = document.createElement('div'); shot.className = 'shot';
-    if (st.img) { var im = document.createElement('img'); im.alt = 'Screenshot for step ' + (i + 1); im.src = st.img; shot.appendChild(im); }
-    var f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.setAttribute('aria-label', 'Screenshot for step ' + (i + 1) + ' (optional)');
-    f.addEventListener('change', function () { if (f.files && f.files[0]) loadShot(f.files[0], st); }); shot.appendChild(f);
-    if (st.img) { var cl = document.createElement('button'); cl.type = 'button'; cl.className = 'btn ghost small'; cl.textContent = 'Remove picture'; cl.addEventListener('click', function () { st.img = ''; renderSteps(); }); shot.appendChild(cl); }
-    d.appendChild(shot);
-    box.appendChild(d);
-  });
-  $('addStep').style.display = state.steps.length >= MAX_STEPS ? 'none' : '';
+function scrollDown() { log.scrollTop = log.scrollHeight; }
+function addMsg(role, text, cls) {
+  var m = document.createElement('div'); m.className = 'msg ' + (role === 'me' ? 'me' : 'ai');
+  var w = document.createElement('div'); w.className = 'who'; w.textContent = role === 'me' ? 'You' : 'OwnSite'; m.appendChild(w);
+  var b = document.createElement('div'); b.className = 'bubble' + (cls ? ' ' + cls : ''); b.textContent = text; m.appendChild(b);
+  col.appendChild(m); scrollDown(); return m;
 }
-
-function loadShot(file, st) {
-  if (!/^image\//.test(file.type)) { setErr('That file is not a picture.'); return; }
-  var url = URL.createObjectURL(file), img = new Image();
-  img.onload = function () {
-    var w = 560, h = Math.round(img.height * w / img.width), c = document.createElement('canvas');
-    if (img.width < w) { w = img.width; h = img.height; }
-    c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
-    st.img = c.toDataURL('image/jpeg', 0.8); URL.revokeObjectURL(url); setErr(''); renderSteps();
-  };
-  img.onerror = function () { URL.revokeObjectURL(url); setErr('Could not read that picture. Try a PNG or JPG.'); };
-  img.src = url;
+function addChips(parent, items) {
+  var c = document.createElement('div'); c.className = 'chips';
+  items.forEach(function (it) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = it[0]; b.addEventListener('click', function () { if (!busy) send(it[1]); }); c.appendChild(b); });
+  parent.appendChild(c); return c;
 }
-
-function renderLooks() {
-  var box = $('looks'); box.innerHTML = '';
-  Object.keys(LOOKS).forEach(function (k) {
-    var L = LOOKS[k], b = document.createElement('button'); b.type = 'button'; b.className = 'look'; b.title = L.name; b.setAttribute('aria-label', L.name + ' look'); b.setAttribute('aria-pressed', String(state.look === k));
-    b.style.background = 'linear-gradient(135deg,' + L.bg1 + ',' + L.bg2 + ')';
-    var i = document.createElement('i'); i.style.background = L.accent; b.appendChild(i);
-    b.addEventListener('click', function () { state.look = k; renderLooks(); saveDraft(); }); box.appendChild(b);
-  });
-}
-
-function setErr(m) { $('err').textContent = m || ''; }
-function shape() { return document.querySelector('input[name=shape]:checked').value; }
-
-function loadVoices() {
-  var sel = $('voice'); if (!('speechSynthesis' in window)) { $('narrate').checked = false; $('narrate').disabled = true; $('voiceRow').hidden = true; return; }
-  var vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
-  var keep = sel.value; sel.innerHTML = '';
-  if (!vs.length) { var o = document.createElement('option'); o.value = ''; o.textContent = 'Device default'; sel.appendChild(o); return; }
-  vs.sort(function (a, b) { return (b.default - a.default) || a.name.localeCompare(b.name); });
-  vs.forEach(function (v) { var o = document.createElement('option'); o.value = v.name; o.textContent = v.name + ' (' + v.lang + ')'; sel.appendChild(o); });
-  if (keep) sel.value = keep;
-}
-if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-$('narrate').addEventListener('change', function () { $('voiceRow').hidden = !this.checked; });
 
 function words(s) { return (s.match(/\S+/g) || []).length; }
 function ms(say) { return Math.round(Math.min(12, Math.max(3.6, words(say) / 2.4 + 1.4)) * 1000); }
-
-function collect() {
-  var product = clean($('product').value, 40), feature = clean($('feature').value, 50);
-  var steps = state.steps.map(function (s) { return { title: clean(s.title, 60), detail: clean(s.detail, 160), img: s.img }; }).filter(function (s) { return s.title; });
-  if (!product) return { error: 'Please enter your product or app name.' };
-  if (!feature) return { error: 'Please enter the feature name.' };
-  if (steps.length < MIN_STEPS) return { error: 'Please fill in at least two steps.' };
-  var hook = clean($('hook').value, 80) || ('Meet ' + feature + '.'), tagline = clean($('tagline').value, 110);
-  var cta = clean($('cta').value, 80) || ('Try ' + product + ' today.'), url = clean($('url').value, 80);
-  var scenes = [];
-  var hookSay = hook + (tagline ? ' ' + tagline : '');
-  scenes.push({ kind: 'hook', kick: product, head: hook, sub: tagline, say: hookSay, ms: ms(hookSay) });
-  steps.forEach(function (s, i) { var say = 'Step ' + (i + 1) + '. ' + s.title + (/[.!?]$/.test(s.title) ? '' : '.') + (s.detail ? ' ' + s.detail : ''); scenes.push({ kind: 'step', n: i + 1, kick: 'Step ' + (i + 1) + ' of ' + steps.length, head: s.title, sub: s.detail, say: say, img: s.img, title: s.title, detail: s.detail, ms: ms(say) }); });
-  var endSay = cta + (url ? ' Visit ' + url + '.' : '');
-  scenes.push({ kind: 'end', kick: product, head: cta, sub: '', pill: url, say: endSay, ms: ms(endSay) });
-  var bytes = steps.reduce(function (a, s) { return a + s.img.length; }, 0);
-  if (bytes > 3500000) return { error: 'The pictures are too large together. Remove one or use smaller screenshots.' };
-  return { cfg: { product: product, feature: feature, shape: shape(), look: LOOKS[state.look], narrate: $('narrate').checked, voice: $('voice').value, rate: parseFloat($('rate').value) || 1, credit: $('credit').checked, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes } };
+function cfgFromSpec(v) {
+  var steps = v.steps, hook = v.hook || ('Meet ' + v.feature + '.'), scenes = [];
+  var hookSay = hook + (v.tagline ? ' ' + v.tagline : '');
+  scenes.push({ kind: 'hook', kick: v.product, head: hook, sub: v.tagline, say: hookSay, ms: ms(hookSay) });
+  steps.forEach(function (s, i) { var say = 'Step ' + (i + 1) + '. ' + s.title + (/[.!?]$/.test(s.title) ? '' : '.') + (s.detail ? ' ' + s.detail : ''); scenes.push({ kind: 'step', n: i + 1, kick: 'Step ' + (i + 1) + ' of ' + steps.length, head: s.title, sub: s.detail, say: say, img: '', title: s.title, detail: s.detail, ms: ms(say) }); });
+  var endSay = v.cta + (v.url ? ' Visit ' + v.url + '.' : '');
+  scenes.push({ kind: 'end', kick: v.product, head: v.cta, sub: '', pill: v.url, say: endSay, ms: ms(endSay) });
+  return { product: v.product, feature: v.feature, shape: v.shape, look: LOOKS[v.look] || LOOKS.ocean, narrate: true, voice: '', rate: 1, credit: true, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes };
 }
 
-function make() {
-  setErr('');
-  var r = collect(); if (r.error) { setErr(r.error); return; }
-  lastHtml = buildVideoHtml(r.cfg);
-  lastName = (clean(r.cfg.feature, 40).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'feature') + '-video';
-  var box = $('pvBox'), tall = r.cfg.shape === 'tall';
-  box.hidden = false; $('empty').hidden = true; $('pvNote').hidden = false; box.className = tall ? 'v' : '';
-  box.style.height = Math.round(box.clientWidth * (tall ? 1280 / 720 : 720 / 1280) + 56) + 'px';
-  $('pv').srcdoc = lastHtml; $('download').disabled = false;
-  if (window.matchMedia('(max-width: 880px)').matches) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  saveDraft();
+function addVideo(v, m) {
+  var html = buildVideoHtml(cfgFromSpec(v)), tall = v.shape === 'tall';
+  var card = document.createElement('div'); card.className = 'vcard';
+  var pv = document.createElement('div'); pv.className = 'pvBox' + (tall ? ' v' : '');
+  var f = document.createElement('iframe'); f.title = v.feature + ' video'; f.setAttribute('allow', 'fullscreen; autoplay'); pv.appendChild(f); card.appendChild(pv);
+  m.appendChild(card);
+  var w = Math.min(tall ? 320 : 560, col.clientWidth - 8);
+  pv.style.height = Math.round(w * (tall ? 1280 / 720 : 720 / 1280) + 56) + 'px'; pv.style.width = w + 'px';
+  f.srcdoc = html;
+  var act = document.createElement('div'); act.className = 'vact';
+  var dl = document.createElement('button'); dl.type = 'button'; dl.className = 'btn solid'; dl.textContent = 'Download HTML';
+  dl.addEventListener('click', function () {
+    var a = document.createElement('a'), url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.href = url; a.download = (v.feature.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'video') + '-video.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  });
+  act.appendChild(dl); m.appendChild(act);
+  var tip = document.createElement('p'); tip.className = 'hint'; tip.textContent = 'Press Play in the video. Sound starts after you press Play.'; m.appendChild(tip);
+  addChips(m, [['Make it shorter', 'Make it shorter.'], [tall ? 'Make it wide' : 'Make it vertical', tall ? 'Make it wide.' : 'Make it vertical for TikTok.'], ['Different look', 'Use a different look.'], ['Change the ending', 'Change the ending to: ']]);
+  scrollDown();
 }
 
-function download() {
-  if (!lastHtml) return;
-  var a = document.createElement('a'), url = URL.createObjectURL(new Blob([lastHtml], { type: 'text/html' }));
-  a.href = url; a.download = lastName + '.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
-}
+function setBusy(b) { busy = b; sendBtn.disabled = b; box.disabled = b; }
 
-var EXAMPLE = {
-  product: 'Acme Planner', feature: 'Shared calendars', hook: 'Planning with your team just got easier.', tagline: 'Share a calendar with anyone in three taps.',
-  cta: 'Try Acme Planner free.', url: 'acme.example.com',
-  steps: [{ title: 'Open the Calendar tab', detail: 'Every calendar you own is listed in one place.' }, { title: 'Tap Share', detail: 'Pick a calendar, then choose who should see it.' }, { title: 'Send the invite', detail: 'Your teammate gets a link and can add events right away.' }]
-};
-function fill(ex) {
-  $('product').value = ex.product; $('feature').value = ex.feature; $('hook').value = ex.hook; $('tagline').value = ex.tagline; $('cta').value = ex.cta; $('url').value = ex.url;
-  state.steps = ex.steps.map(function (s) { return { title: s.title, detail: s.detail, img: '' }; }); renderSteps();
-}
-
-function saveDraft() {
-  try { localStorage.setItem('ownsite_fv', JSON.stringify({ product: $('product').value, feature: $('feature').value, hook: $('hook').value, tagline: $('tagline').value, cta: $('cta').value, url: $('url').value, look: state.look, steps: state.steps.map(function (s) { return { title: s.title, detail: s.detail }; }) })); } catch (e) {}
-}
-function loadDraft() {
+async function send(text) {
+  text = String(text || '').trim(); if (!text || busy) return;
+  if (/:\s*$/.test(text)) { box.value = text; box.focus(); return; } // a chip that needs a few more words
+  addMsg('me', text); box.value = ''; box.style.height = ''; convo.push({ role: 'user', content: text });
+  setBusy(true);
+  var wait = addMsg('ai', ''); var bub = wait.querySelector('.bubble'); bub.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
   try {
-    var d = JSON.parse(localStorage.getItem('ownsite_fv') || 'null'); if (!d || !d.steps || !d.steps.length) return false;
-    ['product', 'feature', 'hook', 'tagline', 'cta', 'url'].forEach(function (k) { $(k).value = d[k] || ''; });
-    if (LOOKS[d.look]) state.look = d.look;
-    state.steps = d.steps.slice(0, MAX_STEPS).map(function (s) { return { title: s.title || '', detail: s.detail || '', img: '' }; });
-    while (state.steps.length < MIN_STEPS) state.steps.push(newStep());
-    return true;
-  } catch (e) { return false; }
+    var r = await fetch('/api/video-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: convo.slice(-8), video: current, lastLink: lastLink }) });
+    var d = await r.json().catch(function () { return {}; });
+    wait.remove();
+    if (!r.ok || !d.video) { addMsg('ai', d.error || 'I could not make that just now. Please try again.', 'err'); convo.pop(); }
+    else {
+      current = d.video; lastLink = d.link || lastLink;
+      convo.push({ role: 'assistant', content: d.reply || 'Here is your video.' });
+      addVideo(d.video, addMsg('ai', d.reply || 'Here is your video.'));
+    }
+  } catch (e) {
+    wait.remove(); convo.pop(); addMsg('ai', 'I could not reach the video maker. Check your connection and try again.', 'err');
+  }
+  setBusy(false); box.focus();
 }
 
-['product', 'feature', 'hook', 'tagline', 'cta', 'url'].forEach(function (k) { $(k).addEventListener('input', saveDraft); });
-$('addStep').addEventListener('click', function () { if (state.steps.length < MAX_STEPS) { state.steps.push(newStep()); renderSteps(); } });
-$('example').addEventListener('click', function () { fill(EXAMPLE); setErr(''); });
-$('make').addEventListener('click', make);
-$('download').addEventListener('click', download);
+$('form').addEventListener('submit', function (e) { e.preventDefault(); send(box.value); });
+box.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(box.value); } });
+box.addEventListener('input', function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 140) + 'px'; });
 
-if (!loadDraft()) { state.steps = [newStep(), newStep(), newStep()]; }
-renderSteps(); renderLooks();
-window.__fv = { collect: collect, make: make, fill: function () { fill(EXAMPLE); }, buildVideoHtml: buildVideoHtml };
+var hi = addMsg('ai', 'Hi! I make short narrated videos.\n\nTell me what it is for in a few words, and paste your website link. I will write it and build it for you. You can then ask me to change anything, just like a normal chat.');
+addChips(hi, [['Try an example', EXAMPLE]]);
+window.__vc = { cfgFromSpec: cfgFromSpec, buildVideoHtml: buildVideoHtml };
 </script>
 </body>
 </html>
