@@ -20,3 +20,4 @@
 6. Add the endpoint's signing secret as nwlhs secret `OWNSITE_STRIPE_WEBHOOK_SECRET`.
 7. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout`.
 8. Manage subscription (cancel, card, invoices): Stripe > Settings > Billing > Customer portal > activate (live mode, allow cancel). Give the restricted key Subscriptions: Read + Customer portal: Write. Deploy `ownsite-portal` (Verify JWT on). `OS.portalUrl` in `index.html` points to it.
+   Optional: create a separate portal configuration for OwnSite and set secret `OWNSITE_PORTAL_CONFIG` (bpc_...) so Title22's portal settings and branding are not shared.

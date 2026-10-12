@@ -2,6 +2,7 @@
 // Request:  POST {}  with  Authorization: Bearer <user JWT>
 // Response: { url } (Stripe Customer Portal: cancel, update card, invoices) or { error, code }
 // Secrets: OWNSITE_STRIPE_KEY (restricted key needs: Subscriptions Read, Customer portal Write)
+//          OWNSITE_PORTAL_CONFIG (optional, bpc_... of OwnSite's own portal configuration)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const SITE = "https://ownsite.app/";
@@ -49,6 +50,9 @@ Deno.serve(async (req) => {
   const f = new URLSearchParams();
   f.set("customer", customer);
   f.set("return_url", SITE);
+  // Optional: OwnSite's own portal configuration (bpc_...) so Title22's settings are not shared.
+  const cfg = (Deno.env.get("OWNSITE_PORTAL_CONFIG") || "").trim();
+  if (cfg) f.set("configuration", cfg);
   const pr = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
     method: "POST",
     headers: { ...auth, "Content-Type": "application/x-www-form-urlencoded" },
