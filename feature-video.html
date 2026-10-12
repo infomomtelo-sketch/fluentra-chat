@@ -137,7 +137,7 @@ function playerMain() {
   var style = ['animation', 'slides'].indexOf(cfg.style) >= 0 ? cfg.style : 'tello';
   stage.className = (tall ? 'tall' : 'wide') + ' st-' + style;
   stage.style.width = DW + 'px'; stage.style.height = DH + 'px';
-  var token = 0, idx = 0, playing = false, narrateOn = !!cfg.narrate && 'speechSynthesis' in window, ccOn = true, typer = null;
+  var token = 0, idx = 0, playing = false, narrateOn = !!cfg.narrate && ('speechSynthesis' in window || scenes.some(function (x) { return x.audio; })), aud = null, ccOn = true, typer = null;
 
   function fit() {
     var s = Math.min(window.innerWidth / DW, (window.innerHeight - CTL) / DH);
@@ -211,6 +211,13 @@ function playerMain() {
       function fin() { if (done) return; done = true; clearTimeout(timer); setTimeout(resolve, 450); }
       if (!speaking) return;
       var floor = setTimeout(function () { floor = null; }, Math.min(s.ms, 2600));
+      if (s.audio) { // natural voice recorded when the video was made
+        try {
+          aud = new Audio(s.audio); aud.onended = fin; aud.onerror = fin;
+          var pp = aud.play(); if (pp && pp.catch) pp.catch(fin);
+          return;
+        } catch (e) { /* falls through to the device voice */ }
+      }
       try {
         var u = new SpeechSynthesisUtterance(s.say);
         var v = speechSynthesis.getVoices().filter(function (x) { return x.name === cfg.voice; })[0]; if (v) { u.voice = v; u.lang = v.lang; }
@@ -227,14 +234,14 @@ function playerMain() {
     for (var i = from; i < n; i++) { show(i); await say(i, my); if (my !== token) return; }
     playing = false; idx = 0; setBtn(true);
   }
-  function stop() { token++; playing = false; clearInterval(typer); try { speechSynthesis.cancel(); } catch (e) {} setBtn(); }
+  function stop() { token++; playing = false; clearInterval(typer); try { if (aud) aud.pause(); speechSynthesis.cancel(); } catch (e) {} setBtn(); }
   function setBtn(ended) { playBtn.textContent = playing ? 'Pause' : (ended ? 'Replay' : 'Play'); }
   playBtn.addEventListener('click', function () { if (playing) stop(); else play(playBtn.textContent === 'Replay' ? 0 : idx); });
   $('restart').addEventListener('click', function () { stop(); play(0); });
   $('ccBtn').addEventListener('click', function () { ccOn = !ccOn; cc.style.visibility = ccOn ? 'visible' : 'hidden'; this.setAttribute('aria-pressed', String(ccOn)); });
   var nb = $('narBtn');
-  if (!('speechSynthesis' in window) || !cfg.narrate) { nb.style.display = 'none'; narrateOn = false; }
-  nb.addEventListener('click', function () { narrateOn = !narrateOn; if (!narrateOn) { try { speechSynthesis.cancel(); } catch (e) {} } this.setAttribute('aria-pressed', String(narrateOn)); });
+  if (!cfg.narrate || (!('speechSynthesis' in window) && !scenes.some(function (x) { return x.audio; }))) { nb.style.display = 'none'; narrateOn = false; }
+  nb.addEventListener('click', function () { narrateOn = !narrateOn; if (!narrateOn) { try { if (aud) aud.pause(); speechSynthesis.cancel(); } catch (e) {} } this.setAttribute('aria-pressed', String(narrateOn)); });
   nb.setAttribute('aria-pressed', String(narrateOn));
   $('fs').addEventListener('click', function () { var d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen(); });
   document.addEventListener('fullscreenchange', function () { setTimeout(fit, 50); });
@@ -332,8 +339,27 @@ function cfgFromSpec(v) {
   return { product: v.product, feature: v.feature, shape: v.shape, style: v.style || 'tello', look: LOOKS[v.look] || LOOKS.ocean, narrate: prefs.voice !== false, voice: '', rate: 1, credit: true, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes };
 }
 
-function addVideo(v, m) {
-  var html = buildVideoHtml(cfgFromSpec(v)), tall = v.shape === 'tall';
+var voiceCache = {}, voiceOff = false;
+function fetchVoice(text) {
+  if (voiceCache[text]) return Promise.resolve(voiceCache[text]);
+  return fetch('/api/video-voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }) })
+    .then(function (r) { if (r.status === 503) voiceOff = true; return r.ok ? r.json() : null; })
+    .then(function (d) { if (d && typeof d.audio === 'string' && d.audio.indexOf('data:audio/') === 0) { voiceCache[text] = d.audio; return d.audio; } return ''; })
+    .catch(function () { return ''; });
+}
+// Records each line in a natural voice; any line that fails keeps the device voice.
+async function addVoices(cfg) {
+  if (!cfg.narrate || voiceOff) return;
+  var lim = 4, q = cfg.scenes.slice(), got = 0;
+  async function worker() { while (q.length && !voiceOff) { var sc = q.shift(); var a = await fetchVoice(sc.say); if (a) { sc.audio = a; got++; } } }
+  var all = []; for (var i = 0; i < lim; i++) all.push(worker());
+  await Promise.race([Promise.all(all), new Promise(function (r) { setTimeout(r, 40000); })]);
+}
+
+async function addVideo(v, m) {
+  var cfg = cfgFromSpec(v), note = null;
+  if (cfg.narrate && !voiceOff) { note = document.createElement('p'); note.className = 'hint'; note.textContent = 'Recording the voice...'; m.appendChild(note); scrollDown(); await addVoices(cfg); note.remove(); }
+  var html = buildVideoHtml(cfg), tall = v.shape === 'tall';
   var card = document.createElement('div'); card.className = 'vcard';
   var pv = document.createElement('div'); pv.className = 'pvBox' + (tall ? ' v' : '');
   var f = document.createElement('iframe'); f.title = v.feature + ' video'; f.setAttribute('allow', 'fullscreen; autoplay'); pv.appendChild(f); card.appendChild(pv);
