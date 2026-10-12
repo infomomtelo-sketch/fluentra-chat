@@ -56,13 +56,53 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 #send { font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; padding: 12px 16px; border: 1px solid var(--amber); background: var(--amber); color: #1a1008; border-radius: 0; }
 #send:disabled { opacity: .5; cursor: default; }
 .hint { font-size: 12px; color: var(--text3); margin-top: 6px; }
+.hdr-l { display: flex; align-items: center; gap: 12px; }
+.menu-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber2); background: transparent; border: 1px solid var(--line); padding: 7px 12px; cursor: pointer; border-radius: 0; }
+.menu-btn:hover { border-color: var(--amber); }
+.menu-btn svg { width: 16px; height: 16px; }
+.ovl { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.ovl.on { opacity: 1; pointer-events: auto; }
+.menu { position: fixed; top: 0; bottom: 0; left: 0; width: min(330px, 88vw); z-index: 50; background: #0b1a2e; border-right: 1px solid var(--line); transform: translateX(-102%); transition: transform .28s ease; overflow-y: auto; padding: 16px 16px 28px; }
+.menu.on { transform: none; }
+.menu-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; color: var(--amber); letter-spacing: 4px; text-transform: uppercase; }
+.menu-x { font: inherit; font-size: 18px; color: var(--text3); background: transparent; border: 1px solid var(--line); width: 36px; height: 36px; cursor: pointer; border-radius: 0; }
+.menu-sec { margin-top: 18px; }
+.menu-lab { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+.opt { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); background: rgba(0,0,0,0.3); border: 1px solid var(--line); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; border-radius: 0; }
+.opt:hover { border-color: var(--amber); }
+.opt[aria-pressed=true] { border-color: var(--amber2); background: rgba(212,144,90,0.14); }
+.opt b { display: block; font-weight: 400; color: var(--amber2); font-size: 15px; }
+.opt small { display: block; color: var(--text3); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.opt.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.two .opt { margin: 0; text-align: center; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 64px; height: 40px; border: 2px solid transparent; cursor: pointer; padding: 0; position: relative; border-radius: 0; }
+.sw[aria-pressed=true] { border-color: var(--amber2); }
+.sw i { position: absolute; right: 4px; bottom: 4px; width: 12px; height: 12px; border-radius: 50%; }
+.menu a.opt { text-decoration: none; }
 </style>
 </head>
 <body>
 <header>
-  <a class="logo" href="/">OwnSite</a>
+  <div class="hdr-l">
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+    <a class="logo" href="/">OwnSite</a>
+  </div>
   <a class="back" href="/">Back to builder</a>
 </header>
+<div class="ovl" id="ovl"></div>
+<nav class="menu" id="menu" aria-label="Video options" aria-hidden="true">
+  <div class="menu-head"><span>Video options</span><button type="button" class="menu-x" id="menuX" aria-label="Close menu">&#x2715;</button></div>
+  <div class="menu-sec"><div class="menu-lab">Style</div><div id="mStyle"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Shape</div><div class="two" id="mShape"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Look</div><div class="swatches" id="mLook"></div></div>
+  <div class="menu-sec"><div class="menu-lab">Sound</div><button type="button" class="opt row" id="mVoice" aria-pressed="true"><span><b>Spoken narration</b><small>Uses your device voice. Starts when you press Play.</small></span><span id="mVoiceState">On</span></button></div>
+  <div class="menu-sec"><div class="menu-lab">More</div>
+    <a class="opt" href="https://ecrentalpm.com/videos" target="_blank" rel="noopener noreferrer"><b>Watch the Tello sample</b><small>See the kind of video we make, then ask for one.</small></a>
+    <button type="button" class="opt" id="mNew"><b>Start a new video</b><small>Clears this chat.</small></button>
+  </div>
+</nav>
 <div id="log" aria-live="polite"><div class="col" id="col"></div></div>
 <div id="bar"><div class="col">
   <form id="form" autocomplete="off">
@@ -94,7 +134,8 @@ function playerMain() {
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var r = document.documentElement.style;
   r.setProperty('--bg1', L.bg1); r.setProperty('--bg2', L.bg2); r.setProperty('--ink', L.ink); r.setProperty('--muted', L.muted); r.setProperty('--accent', L.accent); r.setProperty('--accentInk', L.accentInk);
-  stage.className = tall ? 'tall' : 'wide';
+  var style = ['animation', 'slides'].indexOf(cfg.style) >= 0 ? cfg.style : 'tello';
+  stage.className = (tall ? 'tall' : 'wide') + ' st-' + style;
   stage.style.width = DW + 'px'; stage.style.height = DH + 'px';
   var token = 0, idx = 0, playing = false, narrateOn = !!cfg.narrate && 'speechSynthesis' in window, ccOn = true, typer = null;
 
@@ -150,7 +191,10 @@ function playerMain() {
 
   function show(i) {
     idx = i; var s = scenes[i];
-    kick.textContent = s.kick; head.textContent = s.head;
+    kick.textContent = s.kick;
+    if (style === 'animation') { head.textContent = ''; s.head.split(/\s+/).forEach(function (w, k) { var sp = document.createElement('span'); sp.className = 'w'; sp.textContent = w; sp.style.animationDelay = (cfg.still ? 0 : 0.15 + k * 0.12) + 's'; head.appendChild(sp); head.appendChild(document.createTextNode(' ')); }); }
+    else head.textContent = s.head;
+    $('bignum').textContent = s.kind === 'step' ? (s.n < 10 ? '0' : '') + s.n : '';
     sub.textContent = s.sub || ''; sub.style.display = s.sub ? '' : 'none';
     var pill = $('pill'); pill.textContent = s.pill || ''; pill.style.display = s.pill ? '' : 'none';
     var cr = $('credit'); cr.style.display = (s.kind === 'end' && cfg.credit) ? '' : 'none';
@@ -224,14 +268,26 @@ var PLAYER_CSS = '*{box-sizing:border-box;margin:0;padding:0}html,body{height:10
   '#ctl{height:56px;display:flex;gap:8px;align-items:center;justify-content:center;background:#0a1018;padding:0 8px}#ctl button{white-space:nowrap;font:inherit;font-size:14px;font-weight:700;color:#e8e0d0;background:transparent;border:1px solid #3a4756;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}#ctl button:hover{background:#1a2430}#ctl #play{background:#e8955a;color:#1a1008;border-color:#e8955a;min-width:84px}#ctl button[aria-pressed=false]{opacity:.55}' +
   '@keyframes cin{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}@keyframes pin{from{opacity:0;transform:translateY(70px)}to{opacity:1;transform:none}}@keyframes rin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}' +
   '@keyframes tap{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 0 12px rgba(232,149,90,.35);transform:scale(.985)}}@keyframes zoom{from{transform:scale(1)}to{transform:scale(1.08)}}' +
+  '#stage.st-slides #phone,#stage.st-animation #phone{display:none}' +
+  '#stage.st-slides #copy{left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 130px 90px 150px}#stage.st-slides.tall #copy{padding:0 70px 170px 100px}' +
+  '#stage.st-slides #copy::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:var(--accent)}' +
+  '#stage.st-slides #head{font-size:88px}#stage.st-slides.tall #head{font-size:78px}#stage.st-slides #sub{font-size:38px;max-width:900px}' +
+  '#bignum{display:none;position:absolute;right:60px;bottom:50px;font-size:340px;font-weight:900;color:var(--accent);opacity:.14;line-height:1}#stage.st-slides #bignum{display:block}#stage.st-slides.tall #bignum{bottom:150px;font-size:300px}' +
+  '#stage.st-slides.wide #cc{left:150px;right:150px;text-align:left}#stage.st-slides.tall #cc{left:100px;right:60px}#stage.st-slides #copy.in{animation:sin .6s ease forwards}' +
+  '.blob{display:none;position:absolute;border-radius:50%;background:var(--accent);opacity:.26}#stage.st-animation .blob{display:block}' +
+  '.b1{width:440px;height:440px;left:-130px;top:-150px;animation:fl1 9s ease-in-out infinite}.b2{width:320px;height:320px;right:-90px;bottom:90px;background:#fff;opacity:.11;animation:fl2 11s ease-in-out infinite}.b3{width:170px;height:170px;right:240px;top:80px;animation:fl2 7s ease-in-out infinite reverse}' +
+  '#stage.st-animation #copy{left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 110px 80px}' +
+  '#stage.st-animation #head{font-size:100px}#stage.st-animation.tall #head{font-size:88px}#stage.st-animation #sub{max-width:900px}#stage.st-animation #cc{left:110px;right:110px;text-align:center}' +
+  '.w{display:inline-block;opacity:0;transform:translateY(46px) scale(.88);animation:wp .55s cubic-bezier(.2,1.5,.4,1) forwards}#copy.still .w{animation:none;opacity:1;transform:none}' +
+  '@keyframes wp{to{opacity:1;transform:none}}@keyframes sin{from{opacity:0;transform:translateX(90px)}to{opacity:1;transform:none}}@keyframes fl1{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,50px)}}@keyframes fl2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,-45px)}}' +
   '@media (max-width:360px){#ctl button{padding:6px 5px;font-size:11px}}@media (max-width:420px){#ctl{gap:4px}#ctl button{padding:6px 8px;font-size:12px}#ctl #play{min-width:64px}}' +
-  '@media (prefers-reduced-motion:reduce){#copy,#phone,.row{animation:none!important;opacity:1!important;transform:none!important}}';
+  '@media (prefers-reduced-motion:reduce){#copy,#phone,.row,.w{animation:none!important;opacity:1!important;transform:none!important}}';
 
 function buildVideoHtml(cfg) {
   var json = JSON.stringify(cfg).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   var title = (cfg.feature + ' | ' + cfg.product).replace(/[<>&"]/g, '');
   return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + title + '</title><style>' + PLAYER_CSS + '</style></head><body>' +
-    '<div id="holder"><div id="stage"><div id="copy"><div id="kick"></div><h1 id="head"></h1><p id="sub"></p><span id="pill"></span><div id="credit">Made with ownsite.app</div></div>' +
+    '<div id="holder"><div id="stage"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><div id="bignum"></div><div id="copy"><div id="kick"></div><h1 id="head"></h1><p id="sub"></p><span id="pill"></span><div id="credit">Made with ownsite.app</div></div>' +
     '<div id="phone"><div id="screen"></div></div><div id="cc"></div><div id="bar"><i id="fill"></i></div></div></div>' +
     '<div id="ctl"><button id="play" type="button">Play</button><button id="restart" type="button">Restart</button><button id="ccBtn" type="button" aria-pressed="true">Captions</button><button id="narBtn" type="button">Voice</button><button id="fs" type="button">Full screen</button></div>' +
     '<script id="cfg" type="application/json">' + json + '</scr' + 'ipt><script>(' + playerMain.toString() + ')();</scr' + 'ipt></body></html>';
@@ -242,6 +298,13 @@ function buildVideoHtml(cfg) {
 var $ = function (id) { return document.getElementById(id); };
 var col = $('col'), log = $('log'), box = $('msg'), sendBtn = $('send');
 var convo = [], current = null, lastLink = '', busy = false;
+var STYLES = [['tello', 'Like Tello', 'A phone walkthrough with captions, like a product demo.'], ['animation', 'Animation', 'Big moving words and shapes.'], ['slides', 'Slides', 'Clean slides with big step numbers.']];
+var prefs = { style: 'tello', shape: 'wide', look: 'ocean', voice: true };
+try { var sv = JSON.parse(localStorage.getItem('ownsite_vprefs') || '{}'); ['style', 'shape', 'look'].forEach(function (k) { if (sv[k]) prefs[k] = sv[k]; }); if (sv.voice === false) prefs.voice = false; } catch (e) {}
+if (!STYLES.some(function (x) { return x[0] === prefs.style; })) prefs.style = 'tello';
+if (prefs.shape !== 'tall') prefs.shape = 'wide';
+if (!LOOKS[prefs.look]) prefs.look = 'ocean';
+function savePrefs() { try { localStorage.setItem('ownsite_vprefs', JSON.stringify(prefs)); } catch (e) {} }
 var EXAMPLE = 'A short video that shows what Tello does for landlords. https://ecrentalpm.com/features/tello';
 
 function scrollDown() { log.scrollTop = log.scrollHeight; }
@@ -266,7 +329,7 @@ function cfgFromSpec(v) {
   steps.forEach(function (s, i) { var say = 'Step ' + (i + 1) + '. ' + s.title + (/[.!?]$/.test(s.title) ? '' : '.') + (s.detail ? ' ' + s.detail : ''); scenes.push({ kind: 'step', n: i + 1, kick: 'Step ' + (i + 1) + ' of ' + steps.length, head: s.title, sub: s.detail, say: say, img: '', title: s.title, detail: s.detail, ms: ms(say) }); });
   var endSay = v.cta + (v.url ? ' Visit ' + v.url + '.' : '');
   scenes.push({ kind: 'end', kick: v.product, head: v.cta, sub: '', pill: v.url, say: endSay, ms: ms(endSay) });
-  return { product: v.product, feature: v.feature, shape: v.shape, look: LOOKS[v.look] || LOOKS.ocean, narrate: true, voice: '', rate: 1, credit: true, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes };
+  return { product: v.product, feature: v.feature, shape: v.shape, style: v.style || 'tello', look: LOOKS[v.look] || LOOKS.ocean, narrate: prefs.voice !== false, voice: '', rate: 1, credit: true, steps: steps.length, stepTitles: steps.map(function (s) { return s.title; }), scenes: scenes };
 }
 
 function addVideo(v, m) {
@@ -286,6 +349,11 @@ function addVideo(v, m) {
   });
   act.appendChild(dl); m.appendChild(act);
   var tip = document.createElement('p'); tip.className = 'hint'; tip.textContent = 'Press Play in the video. Sound starts after you press Play.'; m.appendChild(tip);
+  var others = STYLES.filter(function (x) { return x[0] !== (v.style || 'tello'); });
+  var q = document.createElement('p'); q.className = 'hint'; q.textContent = 'Like it? Try another style:'; m.appendChild(q);
+  var sc = document.createElement('div'); sc.className = 'chips';
+  others.forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = x[1]; b.addEventListener('click', function () { if (!busy) setPref('style', x[0]); }); sc.appendChild(b); });
+  m.appendChild(sc);
   addChips(m, [['Make it shorter', 'Make it shorter.'], [tall ? 'Make it wide' : 'Make it vertical', tall ? 'Make it wide.' : 'Make it vertical for TikTok.'], ['Different look', 'Use a different look.'], ['Change the ending', 'Change the ending to: ']]);
   scrollDown();
 }
@@ -299,12 +367,13 @@ async function send(text) {
   setBusy(true);
   var wait = addMsg('ai', ''); var bub = wait.querySelector('.bubble'); bub.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
   try {
-    var r = await fetch('/api/video-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: convo.slice(-8), video: current, lastLink: lastLink }) });
+    var r = await fetch('/api/video-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: convo.slice(-8), video: current, lastLink: lastLink, prefs: { style: prefs.style, shape: prefs.shape, look: prefs.look } }) });
     var d = await r.json().catch(function () { return {}; });
     wait.remove();
     if (!r.ok || !d.video) { addMsg('ai', d.error || 'I could not make that just now. Please try again.', 'err'); convo.pop(); }
     else {
       current = d.video; lastLink = d.link || lastLink;
+      ['style', 'shape', 'look'].forEach(function (k) { if (d.video[k]) prefs[k] = d.video[k]; }); savePrefs(); renderMenu();
       convo.push({ role: 'assistant', content: d.reply || 'Here is your video.' });
       addVideo(d.video, addMsg('ai', d.reply || 'Here is your video.'));
     }
@@ -313,6 +382,47 @@ async function send(text) {
   }
   setBusy(false); box.focus();
 }
+
+/* ───────────────────────── Slide menu ───────────────────────── */
+var menuEl = $('menu'), ovl = $('ovl'), menuBtn = $('menuBtn');
+function openMenu(o) {
+  menuEl.classList.toggle('on', o); ovl.classList.toggle('on', o);
+  menuEl.setAttribute('aria-hidden', String(!o)); menuBtn.setAttribute('aria-expanded', String(o));
+  if (o) { var f = menuEl.querySelector('button'); if (f) f.focus(); } else menuBtn.focus();
+}
+function optBtn(title, sub, on, fn) {
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(on));
+  var t = document.createElement('b'); t.textContent = title; b.appendChild(t);
+  if (sub) { var sm = document.createElement('small'); sm.textContent = sub; b.appendChild(sm); }
+  b.addEventListener('click', fn); return b;
+}
+function renderMenu() {
+  var a = $('mStyle'), b = $('mShape'), c = $('mLook'); a.textContent = ''; b.textContent = ''; c.textContent = '';
+  STYLES.forEach(function (x) { a.appendChild(optBtn(x[1], x[2], prefs.style === x[0], function () { setPref('style', x[0]); })); });
+  [['wide', 'Wide'], ['tall', 'Vertical']].forEach(function (x) { b.appendChild(optBtn(x[1], '', prefs.shape === x[0], function () { setPref('shape', x[0]); })); });
+  Object.keys(LOOKS).forEach(function (k) {
+    var L = LOOKS[k], s = document.createElement('button'); s.type = 'button'; s.className = 'sw'; s.title = L.name; s.setAttribute('aria-label', L.name + ' look'); s.setAttribute('aria-pressed', String(prefs.look === k));
+    s.style.background = 'linear-gradient(135deg,' + L.bg1 + ',' + L.bg2 + ')';
+    var i = document.createElement('i'); i.style.background = L.accent; s.appendChild(i);
+    s.addEventListener('click', function () { setPref('look', k); }); c.appendChild(s);
+  });
+  $('mVoice').setAttribute('aria-pressed', String(prefs.voice)); $('mVoiceState').textContent = prefs.voice ? 'On' : 'Off';
+}
+var NAMES = { style: { tello: 'the Tello style', animation: 'the animation style', slides: 'the slides style' }, shape: { wide: 'wide', tall: 'vertical' } };
+function setPref(k, val) {
+  if (prefs[k] === val) { openMenu(false); return; }
+  prefs[k] = val; savePrefs(); renderMenu(); openMenu(false);
+  if (!current) { addMsg('ai', 'Got it. I will use ' + (k === 'look' ? LOOKS[val].name + ' colors' : NAMES[k][val]) + ' for your video. Now tell me what it is for and paste your website link.'); return; }
+  current[k] = val; // redraw the same script locally, no new AI call
+  addVideo(current, addMsg('ai', 'Switched to ' + (k === 'look' ? LOOKS[val].name + ' colors' : NAMES[k][val]) + '. Here it is. Do you like it? You can switch again from the menu.'));
+}
+menuBtn.addEventListener('click', function () { openMenu(true); });
+$('menuX').addEventListener('click', function () { openMenu(false); });
+ovl.addEventListener('click', function () { openMenu(false); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menuEl.classList.contains('on')) openMenu(false); });
+$('mVoice').addEventListener('click', function () { prefs.voice = !prefs.voice; savePrefs(); renderMenu(); });
+$('mNew').addEventListener('click', function () { convo = []; current = null; lastLink = ''; col.textContent = ''; openMenu(false); var h = addMsg('ai', 'Fresh start. Tell me what the video is for in a few words, and paste your website link.'); addChips(h, [['Try an example', EXAMPLE]]); });
+renderMenu();
 
 $('form').addEventListener('submit', function (e) { e.preventDefault(); send(box.value); });
 box.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(box.value); } });
