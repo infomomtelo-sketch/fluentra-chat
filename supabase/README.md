@@ -19,3 +19,4 @@
    Events: `checkout.session.completed`, `customer.subscription.deleted`.
 6. Add the endpoint's signing secret as nwlhs secret `OWNSITE_STRIPE_WEBHOOK_SECRET`.
 7. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout`.
+8. Manage subscription (cancel, card, invoices): Stripe > Settings > Billing > Customer portal > activate (live mode, allow cancel). Give the restricted key Subscriptions: Read + Customer portal: Write. Deploy `ownsite-portal` (Verify JWT on). `OS.portalUrl` in `index.html` points to it.

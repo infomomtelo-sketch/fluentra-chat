@@ -1160,7 +1160,8 @@ const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
-  checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
+  checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',
+  portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal'
 };
 let osClient = null, osUser = null, osUsage = null;
 const osEnabled = () => !!OS.anonKey;
@@ -1184,6 +1185,7 @@ function renderAcct() {
          : '<div class="acct-note">Usage shows after your first message.</div>') +
     '</div>' +
     (OS.checkoutUrl && (!u || u.plan !== 'pro') ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade to Pro · $19/mo</div>' : '') +
+    (OS.portalUrl && u && u.plan === 'pro' ? '<div class="menu-item" onclick="osManage()"><span class="mi-icon">◈</span> Manage subscription</div>' : '') +
     '<div class="menu-item" onclick="osSignOut()"><span class="mi-icon">✕</span> Sign out</div>';
 }
 
@@ -1224,6 +1226,18 @@ async function osUpgrade() {
     if (d.url) { window.location.href = d.url; return; }
     addMsg('ai', '> ' + (d.error || 'Could not start checkout. Try again.'));
   } catch (e) { addMsg('ai', '> Could not start checkout. Check your connection and try again.'); }
+}
+
+async function osManage() {
+  const tok = await osToken();
+  if (!tok || !OS.portalUrl) return;
+  try {
+    const r = await fetch(OS.portalUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: '{}' });
+    const d = await r.json();
+    if (d.url) { window.location.href = d.url; return; }
+    closeMenu();
+    addMsg('ai', '> ' + (d.error || 'Could not open billing. Try again.'));
+  } catch (e) { closeMenu(); addMsg('ai', '> Could not open billing. Check your connection and try again.'); }
 }
 
 // Returning from Stripe Checkout
