@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
-  const key = Deno.env.get("OWNSITE_STRIPE_KEY");
+  const key = (Deno.env.get("OWNSITE_STRIPE_KEY") || "").trim();
   if (!key) return json({ error: "Checkout is not set up yet.", code: "server" }, 500);
 
   const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");

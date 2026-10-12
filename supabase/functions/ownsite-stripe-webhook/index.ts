@@ -33,7 +33,7 @@ async function verify(raw: string, header: string, secret: string): Promise<bool
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return fail("POST only", 405);
-  const secret = Deno.env.get("OWNSITE_STRIPE_WEBHOOK_SECRET");
+  const secret = (Deno.env.get("OWNSITE_STRIPE_WEBHOOK_SECRET") || "").trim();
   if (!secret) return fail("not configured", 500);
 
   const raw = await req.text();
