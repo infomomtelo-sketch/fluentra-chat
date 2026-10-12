@@ -879,6 +879,8 @@ Always warn users, especially beginners, about these traps:
 - For code: wrap in triple backticks
 - For sections: ━━━ SECTION ━━━
 - Be complete but not overwhelming
+- LINKS: when you point to an official source (a city, county or state office, a registrar, a government form), write it as [Name](https://official-address) and only use addresses you are certain are real official ones (for example ca.gov, sos.ca.gov, irs.gov, fresno.gov). If you are not certain, name the office and tell them to search for it. Never invent a URL.
+- FOLLOW-UP GUIDES: when you suggest topics the user may want a guide on (for example business license, fictitious business name, LLC, insurance), write each as [[topic name]] on its own line so it becomes a clickable button. At most 5, and only topics you can really help with.
 - Always end with ONE clear next step
 - For beginners: break it into numbered steps
 
@@ -992,6 +994,9 @@ function formatAiText(text) {
   const codeStyle = 'background:var(--codebg);border:1px solid rgba(var(--acc),0.15);padding:10px;margin:8px 0;font-size: 13px;overflow-x:auto;white-space:pre;border-left:2px solid var(--amber);';
   const prose = (s) => escapeHtml(s)
     .replace(/━━━(.+?)━━━/g, '<div style="color:var(--amber);font-size: 12px;letter-spacing:3px;margin:10px 0 6px;">━━━$1━━━</div>')
+    .replace(/\[\[([^\]\n]{2,80})\]\]/g, (m, t) => '<button type="button" class="build-btn sug" data-q="' + t.replace(/"/g, '&quot;') + '">' + t + '</button>')
+    .replace(/\[([^\]\n]{1,100})\]\((https?:\/\/[^\s)"<]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--amber2);text-decoration:underline;">$1</a>')
+    .replace(/(^|[\s(>])(https?:\/\/[^\s<)"]*[^\s<)".,;:!?])/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--amber2);text-decoration:underline;word-break:break-all;">$2</a>')
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--amber2);">$1</strong>')
     .replace(/\n/g, '<br>');
   let out = '', last = 0, m;
@@ -1004,6 +1009,15 @@ function formatAiText(text) {
   out += prose(text.slice(last));
   return out;
 }
+
+// Suggestion buttons in AI replies ([[topic]]) ask for a guide on that topic.
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('.sug');
+  if (!b || isThinking) return;
+  const i = document.getElementById('chatInput');
+  i.value = 'Give me a step-by-step guide: ' + b.getAttribute('data-q');
+  sendMessage();
+});
 
 // Pull the HTML out of an AI reply (fenced, unclosed-fence, or bare).
 function extractHtml(content) {
