@@ -1163,7 +1163,7 @@ const OS = {
   checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',
   portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal'
 };
-let osClient = null, osUser = null, osUsage = null;
+let osClient = null, osUser = null, osUsage = null, osPro = false;
 const osEnabled = () => !!OS.anonKey;
 
 function fmtTok(n) { return n >= 1000 ? (Math.round(n / 100) / 10) + 'k' : String(n); }
@@ -1177,6 +1177,7 @@ function renderAcct() {
     return;
   }
   const u = osUsage;
+  const isPro = (u && u.plan === 'pro') || (!u && osPro);
   const pct = u ? Math.min(100, Math.round(u.used / u.limit * 100)) : 0;
   box.innerHTML = '<div class="menu-label">Account</div>' +
     '<div class="acct-note" style="padding:0 20px;">' + escapeHtml(osUser.email || '') + '</div>' +
@@ -1184,11 +1185,19 @@ function renderAcct() {
       (u ? '<div class="meter"><i style="width:' + pct + '%"></i></div><div class="acct-note">' + u.plan.toUpperCase() + ' · ' + fmtTok(u.used) + ' / ' + fmtTok(u.limit) + ' TOKENS THIS MONTH</div>'
          : '<div class="acct-note">Usage shows after your first message.</div>') +
     '</div>' +
-    (OS.checkoutUrl && (!u || u.plan !== 'pro') ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade to Pro · $19/mo</div>' : '') +
-    (OS.portalUrl && u && u.plan === 'pro' ? '<div class="menu-item" onclick="osManage()"><span class="mi-icon">◈</span> Manage subscription</div>' : '') +
+    (OS.checkoutUrl && !isPro ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade to Pro · $19/mo</div>' : '') +
+    (OS.portalUrl && isPro ? '<div class="menu-item" onclick="osManage()"><span class="mi-icon">◈</span> Manage subscription</div>' : '') +
     '<div class="menu-item" onclick="osSignOut()"><span class="mi-icon">✕</span> Sign out</div>';
 }
 
+async function osLoadPlan() {
+  try {
+    if (!osClient || !osUser) { osPro = false; return; }
+    const { data } = await osClient.from('profiles').select('ownsite_pro').eq('id', osUser.id).maybeSingle();
+    osPro = !!(data && data.ownsite_pro);
+    renderAcct();
+  } catch (e) {}
+}
 function osInit() {
   if (!osEnabled()) return;
   const sc = document.createElement('script');
@@ -1197,10 +1206,10 @@ function osInit() {
     osClient = window.supabase.createClient(OS.url, OS.anonKey, {
       auth: { persistSession: true, detectSessionInUrl: true, storageKey: 'ownsite-auth' }
     });
-    osClient.auth.getSession().then(({ data }) => { osUser = data.session ? data.session.user : null; renderAcct(); });
+    osClient.auth.getSession().then(({ data }) => { osUser = data.session ? data.session.user : null; renderAcct(); osLoadPlan(); });
     // Defer follow-up work out of the callback to avoid auth deadlocks.
     osClient.auth.onAuthStateChange((_e, session) => {
-      setTimeout(() => { osUser = session ? session.user : null; renderAcct(); }, 0);
+      setTimeout(() => { osUser = session ? session.user : null; renderAcct(); osLoadPlan(); }, 0);
     });
   };
   sc.onerror = () => console.log('Sign-in library failed to load');
