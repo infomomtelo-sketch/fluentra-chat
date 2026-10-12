@@ -1176,11 +1176,10 @@ const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
-  checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',
-  portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal',
+  checkoutUrl: '',   // Buy tokens. After deploying the new ownsite-checkout set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
   buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
 };
-let osClient = null, osUser = null, osUsage = null, osPro = false;
+let osClient = null, osUser = null, osUsage = null, osEverBought = null;
 const osEnabled = () => !!OS.anonKey;
 
 function fmtTok(n) { return n >= 1000 ? (Math.round(n / 100) / 10) + 'k' : String(n); }
@@ -1194,24 +1193,28 @@ function renderAcct() {
     return;
   }
   const u = osUsage;
-  const isPro = (u && u.plan === 'pro') || (!u && osPro);
   const pct = u ? Math.min(100, Math.round(u.used / u.limit * 100)) : 0;
   box.innerHTML = '<div class="menu-label">Account</div>' +
     '<div class="acct-note" style="padding:0 20px;">' + escapeHtml(osUser.email || '') + '</div>' +
     '<div style="padding:0 20px;">' +
-      (u ? '<div class="meter"><i style="width:' + pct + '%"></i></div><div class="acct-note">' + u.plan.toUpperCase() + ' · ' + fmtTok(u.used) + ' / ' + fmtTok(u.limit) + ' TOKENS THIS MONTH</div>'
-         : '<div class="acct-note">Usage shows after your first message.</div>') +
+      (u ? '<div class="meter"><i style="width:' + pct + '%"></i></div><div class="acct-note">FREE · ' + fmtTok(u.used) + ' / ' + fmtTok(u.limit) + ' THIS MONTH<br>BOUGHT TOKENS · ' + fmtTok(u.credits || 0) + '</div>'
+         : '<div class="acct-note">Balance shows after sign-in loads.</div>') +
     '</div>' +
-    (OS.checkoutUrl && !isPro ? '<div class="menu-item" onclick="osUpgrade()"><span class="mi-icon">◈</span> Upgrade to Pro · $19/mo</div>' : '') +
-    (OS.portalUrl && isPro ? '<div class="menu-item" onclick="osManage()"><span class="mi-icon">◈</span> Manage subscription</div>' : '') +
+    (OS.checkoutUrl ? '<div class="menu-item" onclick="osBuyOpen()"><span class="mi-icon">◈</span> Buy tokens</div>' : '') +
     '<div class="menu-item" onclick="osSignOut()"><span class="mi-icon">✕</span> Sign out</div>';
 }
 
 async function osLoadPlan() {
   try {
-    if (!osClient || !osUser) { osPro = false; return; }
-    const { data } = await osClient.from('profiles').select('ownsite_pro').eq('id', osUser.id).maybeSingle();
-    osPro = !!(data && data.ownsite_pro);
+    if (!osClient || !osUser) { osUsage = null; osEverBought = null; return; }
+    const per = new Date(); per.setUTCDate(1);
+    const [ru, rc] = await Promise.all([
+      osClient.from('ownsite_usage').select('tokens_used').eq('user_id', osUser.id).eq('period', per.toISOString().slice(0, 10)).maybeSingle(),
+      osClient.from('ownsite_credits').select('tokens,ever_bought').eq('user_id', osUser.id).maybeSingle()
+    ]);
+    if (ru.error && rc.error) return;
+    osUsage = { used: Number((ru.data && ru.data.tokens_used) || 0), limit: 30000, plan: 'free', credits: Number((rc.data && rc.data.tokens) || 0) };
+    osEverBought = !!(rc.data && rc.data.ever_bought);
     renderAcct();
   } catch (e) {}
 }
@@ -1242,35 +1245,48 @@ async function osToken() {
   const { data } = await osClient.auth.getSession();
   return data.session ? data.session.access_token : null;
 }
-async function osUpgrade() {
-  const tok = await osToken();
-  if (!tok || !OS.checkoutUrl) return;
-  if (!confirm('OwnSite Pro is $19 per month and renews automatically each month until you cancel. Continue to secure checkout?')) return;
-  try {
-    const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: '{}' });
-    const d = await r.json();
-    if (d.url) { window.location.href = d.url; return; }
-    addMsg('ai', '> ' + (d.error || 'Could not start checkout. Try again.'));
-  } catch (e) { addMsg('ai', '> Could not start checkout. Check your connection and try again.'); }
-}
-
-async function osManage() {
-  const tok = await osToken();
-  if (!tok || !OS.portalUrl) return;
-  try {
-    const r = await fetch(OS.portalUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: '{}' });
-    const d = await r.json();
-    if (d.url) { window.location.href = d.url; return; }
-    closeMenu();
-    addMsg('ai', '> ' + (d.error || 'Could not open billing. Try again.'));
-  } catch (e) { closeMenu(); addMsg('ai', '> Could not open billing. Check your connection and try again.'); }
+// ── BUY TOKENS (one-time payment; no subscription) ─────────────
+const TOK_PER_DOLLAR = 50000;   // $20 per 1M tokens
+function osBuyOpen() {
+  closeMenu();
+  if (!OS.checkoutUrl) return;
+  if (osEnabled() && !osUser) { addMsg('ai', '> Sign in first. Open the menu, then Account, then Sign in with Google.'); return; }
+  const msgs = document.getElementById('messages');
+  removeWelcome();
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = '<div class="build-output"><div class="build-title">◈ BUY TOKENS</div>' +
+    '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-bottom:10px">Pick an amount from $5 to $100. $20 buys 1,000,000 tokens. A small 3-page site is roughly 25,000 tokens.</div>' +
+    '<div class="build-actions"><button class="build-btn" data-d="5">$5</button><button class="build-btn" data-d="10">$10</button><button class="build-btn" data-d="25">$25</button><button class="build-btn" data-d="50">$50</button></div>' +
+    '<div style="margin:12px 0;display:flex;align-items:center;gap:8px"><span>$</span><input type="number" min="5" max="100" step="1" value="10" class="buy-amt" style="width:90px;padding:8px;background:var(--codebg);border:1px solid rgba(var(--acc),0.3);color:inherit;font:inherit"><span class="buy-tok acct-note"></span></div>' +
+    '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-bottom:10px">One-time payment in US dollars. No subscription, nothing renews. Tokens never expire. Purchases are non-refundable once made. A build that fails is never charged. Secure checkout by Stripe.</div>' +
+    '<div class="build-actions"><button class="build-btn primary" data-act="pay">CONTINUE TO PAYMENT</button><button class="build-btn" data-act="no">CANCEL</button></div></div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  const inp = div.querySelector('.buy-amt'), note = div.querySelector('.buy-tok');
+  const upd = () => { const d = parseInt(inp.value, 10); note.textContent = (d >= 5 && d <= 100) ? '= ' + fmtTok(d * TOK_PER_DOLLAR) + ' tokens' : 'enter 5 to 100'; };
+  inp.addEventListener('input', upd); upd();
+  div.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => { inp.value = b.getAttribute('data-d'); upd(); }));
+  div.querySelector('[data-act="no"]').addEventListener('click', () => div.remove());
+  div.querySelector('[data-act="pay"]').addEventListener('click', async () => {
+    const dollars = parseInt(inp.value, 10);
+    if (!(dollars >= 5 && dollars <= 100)) { note.textContent = 'enter a whole number from 5 to 100'; return; }
+    const tok = await osToken();
+    if (!tok) return;
+    try {
+      const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: JSON.stringify({ dollars }) });
+      const d = await r.json();
+      if (d.url) { window.location.href = d.url; return; }
+      addMsg('ai', '> ' + (d.error || 'Could not start checkout. Try again.'));
+    } catch (e) { addMsg('ai', '> Could not start checkout. Check your connection and try again.'); }
+  });
 }
 
 // Returning from Stripe Checkout
 try {
-  if (/[?&]upgraded=1/.test(location.search)) {
+  if (/[?&](bought|upgraded)=1/.test(location.search)) {
     history.replaceState(null, '', location.pathname);
-    setTimeout(() => addMsg('ai', '> Payment received. Thank you. OwnSite Pro turns on within a minute. Send a message and your meter will show the new allowance.'), 800);
+    setTimeout(() => addMsg('ai', '> Payment received. Thank you. Your tokens are added within a minute and show in the menu.'), 800);
+    [6000, 20000, 45000].forEach(t => setTimeout(osLoadPlan, t));
   }
 } catch (e) {}
 
@@ -1333,7 +1349,7 @@ async function sendMessage() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: hdrs,
-      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM, userMessage: text })
+      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM, userMessage: text, mode: ccMode ? 'handoff' : '' })
     });
     const data = await res.json();
     if (data.usage) { osUsage = data.usage; renderAcct(); }
@@ -1357,7 +1373,10 @@ async function sendMessage() {
         }
       }
     } else if (data.code === 'limit') {
-      addMsg('ai', '> ' + data.error + (OS.checkoutUrl ? ' Open the menu and choose Upgrade for more.' : ' It resets next month.'));
+      addMsg('ai', "> You're out of tokens. Your free tokens reset next month. Open the menu and choose Buy tokens to keep building now.");
+    } else if (data.code === 'locked') {
+      ccMode = false;
+      addMsg('ai', '> The Claude Code prompt unlocks with any token purchase. Open the menu and choose Buy tokens. Tokens never expire and the smallest purchase is $5.');
     } else {
       addMsg('ai', '> Signal lost. ' + (data.error || 'Retry transmission.'));
     }
@@ -1396,6 +1415,10 @@ THE PROMPT MUST BE WRITTEN TO CLAUDE CODE (second person, "you") AND INCLUDE:
 Keep the prompt specific and complete but under about 1500 words. Plain text, no code fences around the whole prompt. Do not add legal, tax or medical claims. No emojis.`;
 
 function startCC() {
+  if (osEnabled() && osEverBought === false) {
+    addMsg('ai', '> The Claude Code prompt unlocks with any token purchase. Open the menu and choose Buy tokens. Tokens never expire and the smallest purchase is $5.');
+    return;
+  }
   ccMode = true; mpMode = false;
   addMsg('ai', "> FULL SITE MODE\n\nTell me everything about the site or app in one message: what it is, who it's for, the pages, and any logins, payments or database you need. I'll write a complete prompt. You paste it into your own Claude Code, and it builds the project in your own GitHub and publishes it on your own hosting.\n\nAnything you leave out, I'll choose a simple default and list it for you to check.");
   const i = document.getElementById('chatInput');
@@ -1482,7 +1505,7 @@ async function mpPlan(idea) {
     return;
   }
   if (d.code === 'short') {
-    addMsg('ai', '> Not enough allowance left for this build.\n\nIt needs about ' + fmtTok(d.need) + ' tokens reserved and you have ' + fmtTok(d.remaining) + ' left this month. Nothing was built and nothing was charged beyond the small planning step.' + (OS.checkoutUrl && osUsage && osUsage.plan !== 'pro' ? ' Open the menu and choose Upgrade for a bigger monthly allowance.' : ''));
+    addMsg('ai', '> Not enough tokens left for this build.\n\nIt needs about ' + fmtTok(d.need) + ' tokens reserved and you have ' + fmtTok(d.remaining) + ' left. Nothing was built and nothing was charged beyond the small planning step.' + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : ''));
     mpMode = false;
     return;
   }

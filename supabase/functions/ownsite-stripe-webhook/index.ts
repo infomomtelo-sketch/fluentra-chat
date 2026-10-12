@@ -1,7 +1,7 @@
 // Supabase Edge Function: ownsite-stripe-webhook  (deploy to the nwlhs project)
 // IMPORTANT: turn OFF "Verify JWT" for this function (Stripe does not send one).
 // Stripe endpoint URL: https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-stripe-webhook
-// Events to send: checkout.session.completed, customer.subscription.deleted
+// Events to send: checkout.session.completed  (one-time token purchases; no subscriptions anymore)
 // Secrets: OWNSITE_STRIPE_WEBHOOK_SECRET (whsec_...). SUPABASE_URL / SERVICE_ROLE are built in.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
@@ -46,27 +46,21 @@ Deno.serve(async (req) => {
 
   if (ev.type === "checkout.session.completed") {
     if (obj.metadata?.app !== "ownsite") return ok({ received: true, ignored: "not ownsite" });
-    if (obj.mode !== "subscription" || !["paid", "no_payment_required"].includes(obj.payment_status)) {
-      return ok({ received: true, ignored: "not paid" });
+    if (obj.mode !== "payment" || obj.payment_status !== "paid" || obj.currency !== "usd") {
+      return ok({ received: true, ignored: "not a paid usd purchase" });
     }
     const uid = obj.client_reference_id ?? obj.metadata?.user_id;
-    if (!uid) return ok({ received: true, ignored: "no user" });
-    const { data, error } = await admin.from("profiles")
-      .update({ ownsite_pro: true, ownsite_subscription_id: obj.subscription ?? null })
-      .eq("id", uid).select("id");
-    if (error || !data?.length) {
-      console.error("activate failed", uid, error?.message ?? "no profile row");
-      return fail("could not activate", 500); // Stripe will retry
+    const cents = Number(obj.amount_total ?? 0);
+    if (!uid || !obj.id || cents < 100) return ok({ received: true, ignored: "no user or amount" });
+    // $20 per 1,000,000 tokens = 50,000 tokens per dollar = 500 tokens per cent. Computed from what was really paid.
+    const tokens = Math.round(cents * 500);
+    const { error } = await admin.rpc("ownsite_add_credits", {
+      p_user: uid, p_tokens: tokens, p_session: obj.id, p_amount: cents,
+    });
+    if (error) {
+      console.error("add credits failed", uid, error.message);
+      return fail("could not add credits", 500); // Stripe will retry; the session id makes it safe to repeat
     }
-    return ok();
-  }
-
-  if (ev.type === "customer.subscription.deleted") {
-    if (!obj.id) return ok({ received: true, ignored: "no id" });
-    // Only touches the row that holds this exact OwnSite subscription id.
-    const { error } = await admin.from("profiles")
-      .update({ ownsite_pro: false }).eq("ownsite_subscription_id", obj.id);
-    if (error) { console.error("deactivate failed", error.message); return fail("could not deactivate", 500); }
     return ok();
   }
 

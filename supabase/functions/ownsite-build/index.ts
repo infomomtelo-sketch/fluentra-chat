@@ -8,11 +8,11 @@
 // than `reserved` (125% of the quote); only pages that were actually delivered are charged;
 // anything beyond the reserve is absorbed by us.
 // Secrets: ANTHROPIC_API_KEY (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are built in)
-// Table: ownsite_builds (see supabase/ownsite_builds.sql)
+// Tables: ownsite_builds, ownsite_credits (see supabase/ownsite_builds.sql and ownsite_credits.sql)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const MODEL = "claude-sonnet-5-5";
-const LIMITS = { free: 30000, pro: 500000 } as const;
+const FREE_LIMIT = 30000;       // free tokens per month; bought credits are used after these
 const PAGE_EST = 7000;          // tokens (input + output) quoted per page
 const RESERVE_FACTOR = 1.25;    // most a user can be charged = quote x 1.25
 const HARD_CAP_FACTOR = 2;      // we stop trying after the AI has used quote x 2 (we absorb the extra)
@@ -62,22 +62,27 @@ const pageSystem = (title: string, css: string, pages: { file: string; title: st
   RULES;
 
 async function allowance(uid: string) {
-  const { data: prof } = await admin.from("profiles").select("ownsite_pro").eq("id", uid).maybeSingle();
-  const plan: "free" | "pro" = prof?.ownsite_pro ? "pro" : "free";
-  const limit = LIMITS[plan];
   const period = new Date(); period.setUTCDate(1);
-  const { data: row } = await admin.from("ownsite_usage").select("tokens_used")
-    .eq("user_id", uid).eq("period", period.toISOString().slice(0, 10)).maybeSingle();
+  const [{ data: row }, { data: cr }] = await Promise.all([
+    admin.from("ownsite_usage").select("tokens_used")
+      .eq("user_id", uid).eq("period", period.toISOString().slice(0, 10)).maybeSingle(),
+    admin.from("ownsite_credits").select("tokens").eq("user_id", uid).maybeSingle(),
+  ]);
   const used = Number(row?.tokens_used ?? 0);
-  return { plan, limit, used };
+  const credits = Number(cr?.tokens ?? 0);
+  return { used, credits, available: Math.max(0, FREE_LIMIT - used) + credits };
 }
 
+// Free monthly tokens first, then bought credits; never below zero (extra is absorbed by us).
 async function charge(uid: string, tokens: number) {
   if (tokens <= 0) return null;
-  const { data, error } = await admin.rpc("ownsite_add_usage", { p_user: uid, p_tokens: tokens });
-  if (error) console.error("usage write failed", error.message);
-  return data == null ? null : Number(data);
+  const { data, error } = await admin.rpc("ownsite_charge", { p_user: uid, p_tokens: tokens, p_free_limit: FREE_LIMIT });
+  if (error) { console.error("charge failed", error.message); return null; }
+  const row = Array.isArray(data) ? data[0] : data;
+  return { used: Number(row?.out_used ?? 0), credits: Number(row?.out_credits ?? 0) };
 }
+
+const usageOf = (used: number, credits: number) => ({ used, limit: FREE_LIMIT, plan: "free", credits });
 
 async function claude(system: string, user: string, maxTokens: number) {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
@@ -130,22 +135,24 @@ function parsePlan(text: string): Plan | null {
 
 async function doPlan(uid: string, idea: string) {
   const a = await allowance(uid);
-  if (a.used >= a.limit) {
-    return { error: "You've used this month's allowance.", code: "limit", usage: { used: a.used, limit: a.limit, plan: a.plan } };
+  if (a.available <= 0) {
+    return { error: "You're out of tokens.", code: "limit", usage: usageOf(a.used, a.credits) };
   }
   const r = await claude(PLAN_SYSTEM, idea, PLAN_MAX_TOKENS);
   if ("error" in r) return r;
-  const used = (await charge(uid, r.spent)) ?? a.used + r.spent;   // the plan itself is small and is charged normally
-  const usage = { used, limit: a.limit, plan: a.plan };
+  const after = await charge(uid, r.spent);                 // the plan itself is small and is charged normally
+  const used = after?.used ?? a.used;
+  const credits = after?.credits ?? a.credits;
+  const usage = usageOf(used, credits);
   const plan = parsePlan(r.text);
   if (!plan) return { error: "Could not plan that. Try describing it a little differently.", code: "plan", usage };
   if (plan.too_big) return { handoff: true, reason: plan.reason || "This needs more than a static site.", usage };
 
   const estimate = plan.pages.length * PAGE_EST;
   const reserved = Math.ceil(estimate * RESERVE_FACTOR);
-  const remaining = Math.max(0, a.limit - used);
+  const remaining = Math.max(0, FREE_LIMIT - used) + credits;
   if (remaining < reserved) {
-    return { code: "short", error: "Not enough allowance left for this build.", need: reserved, remaining, estimate, plan, usage };
+    return { code: "short", error: "Not enough tokens left for this build.", need: reserved, remaining, estimate, plan, usage };
   }
   const { data, error } = await admin.from("ownsite_builds")
     .insert({ user_id: uid, idea, plan, estimate, reserved }).select("id").single();
@@ -163,7 +170,7 @@ async function doPage(uid: string, buildId: string, file: string) {
   if (!plan.pages.some((p) => p.file === file)) return { error: "Unknown page.", code: "input" };
   const files = (b.files ?? {}) as Record<string, string>;
   const a = await allowance(uid);
-  const usage = { used: a.used, limit: a.limit, plan: a.plan };
+  const usage = usageOf(a.used, a.credits);
   const doneNow = (f: Record<string, string>) => plan.pages.every((p) => f[p.file]);
 
   if (files[file]) return { file, html: files[file], usage, done: doneNow(files) };           // already built: free
@@ -193,8 +200,8 @@ async function doPage(uid: string, buildId: string, file: string) {
   await admin.from("ownsite_builds").update({
     files, actual, charged: b.charged + chargeNow, status: done ? "done" : "building", updated_at: new Date().toISOString(),
   }).eq("id", buildId);
-  const used = (await charge(uid, chargeNow)) ?? a.used + chargeNow;
-  return { file, html, usage: { used, limit: a.limit, plan: a.plan }, done };
+  const after = await charge(uid, chargeNow);
+  return { file, html, usage: after ? usageOf(after.used, after.credits) : usage, done };
 }
 
 Deno.serve(async (req) => {

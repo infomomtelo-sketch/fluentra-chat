@@ -1,7 +1,10 @@
 // Supabase Edge Function: ownsite-chat  (deploy to the nwlhs project)
-// Request:  POST { system, userMessage }  with  Authorization: Bearer <user JWT>
-// Response: JSON { text, usage:{used,limit,plan} }  or  { error, code }
+// Request:  POST { system, userMessage, mode? }  with  Authorization: Bearer <user JWT>
+//           mode "handoff" (Claude Code prompt writer) needs at least one token purchase.
+// Response: JSON { text, usage:{used,limit,plan,credits} }  or  { error, code }
+// Tokens: 30,000 free every month (used first), then bought credits (never expire).
 // Secrets: ANTHROPIC_API_KEY  (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are built in)
+// Needs: supabase/ownsite_credits.sql
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const MODEL = "claude-sonnet-5-5";
@@ -9,9 +12,7 @@ const MAX_TOKENS = 16000;
 const MAX_SYSTEM_CHARS = 30000;
 const MAX_USER_CHARS = 8000;
 const KEEPALIVE_MS = 10000;
-
-// Monthly allowances (input + output tokens). Edit these to change plans.
-const LIMITS = { free: 30000, pro: 500000 } as const;
+const FREE_LIMIT = 30000;   // free tokens per month
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,7 @@ const admin = createClient(
   { auth: { persistSession: false } },
 );
 
-async function run(uid: string, plan: "free" | "pro", limit: number, system: string, userMessage: string) {
+async function run(uid: string, system: string, userMessage: string) {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) return { error: "Server is missing ANTHROPIC_API_KEY.", code: "server" };
 
@@ -56,9 +57,10 @@ async function run(uid: string, plan: "free" | "pro", limit: number, system: str
   if (!text) return { error: "Empty reply. Try again.", code: "empty" };
 
   const spent = (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0);
-  const { data: used, error } = await admin.rpc("ownsite_add_usage", { p_user: uid, p_tokens: spent });
-  if (error) console.error("usage write failed", error.message);
-  return { text, usage: { used: Number(used ?? 0), limit, plan } };
+  const { data: bal, error } = await admin.rpc("ownsite_charge", { p_user: uid, p_tokens: spent, p_free_limit: FREE_LIMIT });
+  if (error) console.error("charge failed", error.message);
+  const row = Array.isArray(bal) ? bal[0] : bal;
+  return { text, usage: { used: Number(row?.out_used ?? 0), limit: FREE_LIMIT, plan: "free", credits: Number(row?.out_credits ?? 0) } };
 }
 
 Deno.serve(async (req) => {
@@ -71,24 +73,30 @@ Deno.serve(async (req) => {
   if (uerr || !u?.user) return json({ error: "Session expired. Sign in again.", code: "auth" }, 401);
   const uid = u.user.id;
 
-  let system = "", userMessage = "";
+  let system = "", userMessage = "", mode = "";
   try {
     const b = await req.json();
     system = typeof b?.system === "string" ? b.system.slice(0, MAX_SYSTEM_CHARS) : "";
     userMessage = typeof b?.userMessage === "string" ? b.userMessage.slice(0, MAX_USER_CHARS) : "";
+    mode = typeof b?.mode === "string" ? b.mode : "";
   } catch { /* fall through */ }
   if (!userMessage.trim()) return json({ error: "No message provided.", code: "input" }, 400);
 
-  const { data: prof } = await admin.from("profiles").select("ownsite_pro").eq("id", uid).maybeSingle();
-  const plan: "free" | "pro" = prof?.ownsite_pro ? "pro" : "free";
-  const limit = LIMITS[plan];
-
   const period = new Date(); period.setUTCDate(1);
-  const { data: row } = await admin.from("ownsite_usage").select("tokens_used")
-    .eq("user_id", uid).eq("period", period.toISOString().slice(0, 10)).maybeSingle();
+  const [{ data: row }, { data: cr }] = await Promise.all([
+    admin.from("ownsite_usage").select("tokens_used")
+      .eq("user_id", uid).eq("period", period.toISOString().slice(0, 10)).maybeSingle(),
+    admin.from("ownsite_credits").select("tokens, ever_bought").eq("user_id", uid).maybeSingle(),
+  ]);
   const used = Number(row?.tokens_used ?? 0);
-  if (used >= limit) {
-    return json({ error: "You've used this month's allowance.", code: "limit", usage: { used, limit, plan } });
+  const credits = Number(cr?.tokens ?? 0);
+  const usage = { used, limit: FREE_LIMIT, plan: "free", credits };
+
+  if (mode === "handoff" && !cr?.ever_bought) {
+    return json({ error: "The Claude Code prompt unlocks with any token purchase.", code: "locked", usage });
+  }
+  if (used >= FREE_LIMIT && credits <= 0) {
+    return json({ error: "You're out of tokens.", code: "limit", usage });
   }
 
   // Keep the connection alive with whitespace during long builds.
@@ -97,7 +105,7 @@ Deno.serve(async (req) => {
     async start(c) {
       const t = setInterval(() => { try { c.enqueue(enc.encode(" ")); } catch { /* closed */ } }, KEEPALIVE_MS);
       try {
-        c.enqueue(enc.encode(JSON.stringify(await run(uid, plan, limit, system, userMessage))));
+        c.enqueue(enc.encode(JSON.stringify(await run(uid, system, userMessage))));
       } catch (e) {
         console.error("ownsite-chat error", e);
         c.enqueue(enc.encode(JSON.stringify({ error: "Unexpected error. Try again.", code: "server" })));

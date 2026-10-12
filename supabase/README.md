@@ -9,18 +9,14 @@
 5. Allowances live in `LIMITS` at the top of `ownsite-chat/index.ts` (free 30k, pro 500k tokens/month).
    Pro = `profiles.ownsite_pro = true`, which the existing Stripe webhook already sets.
 
-## Paid plan ($19/month)
-1. Stripe: restricted key with Checkout Sessions: Write + Customers: Write.
-2. nwlhs > Edge Functions > Secrets: add `OWNSITE_STRIPE_KEY` (that key).
-3. Deploy `ownsite-checkout` (Verify JWT can stay on).
-4. Deploy `ownsite-stripe-webhook` with Verify JWT turned OFF.
-5. Stripe > Developers > Webhooks > Add endpoint:
-   `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-stripe-webhook`
-   Events: `checkout.session.completed`, `customer.subscription.deleted`.
-6. Add the endpoint's signing secret as nwlhs secret `OWNSITE_STRIPE_WEBHOOK_SECRET`.
-7. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout`.
-8. Manage subscription (cancel, card, invoices): Stripe > Settings > Billing > Customer portal > activate (live mode, allow cancel). Give the restricted key Subscriptions: Read + Customer portal: Write. Deploy `ownsite-portal` (Verify JWT on). `OS.portalUrl` in `index.html` points to it.
-   Optional: create a separate portal configuration for OwnSite and set secret `OWNSITE_PORTAL_CONFIG` (bpc_...) so Title22's portal settings and branding are not shared.
+## Tokens (one-time purchases; no subscription)
+Free: 30,000 tokens every month (used first). Bought tokens never expire. Rate: $20 per 1,000,000 tokens, $5 to $100 per purchase.
+1. Run `supabase/ownsite_credits.sql` in the nwlhs SQL editor (after `ownsite_usage.sql`).
+2. Deploy (replace) `ownsite-chat`, `ownsite-build`, `ownsite-checkout` (Verify JWT on) and `ownsite-stripe-webhook` (Verify JWT OFF).
+3. Stripe webhook `ownsite-wehook` only needs the event `checkout.session.completed`. Secrets: `OWNSITE_STRIPE_KEY` (Checkout Sessions: Write), `OWNSITE_STRIPE_WEBHOOK_SECRET`.
+4. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout` (the Buy tokens menu item appears only when it is set).
+5. The old `ownsite-portal` function and the profiles.ownsite_pro columns are no longer used and can be deleted.
+The Claude Code prompt unlocks after any purchase (server-enforced in `ownsite-chat`, mode "handoff").
 
 ## Multi-page builder
 1. Run `supabase/ownsite_builds.sql` in the nwlhs SQL editor.
