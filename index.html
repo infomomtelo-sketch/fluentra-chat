@@ -640,6 +640,7 @@ body.theme-light {
     <div class="menu-label">Mission</div>
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
     <div class="menu-item" id="mpMenuItem" style="display:none" onclick="startMP();closeMenu()"><span class="mi-icon">▤</span> Multi-page site</div>
+    <div class="menu-item" id="mkMenuItem" style="display:none" onclick="mpVideoOpen();closeMenu()"><span class="mi-icon">▶</span> Marketing video</div>
     <div class="menu-item" onclick="startCC();closeMenu()"><span class="mi-icon">⟫</span> Full site with Claude Code</div>
     <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
     <div class="menu-item" onclick="openAccounts();closeMenu()"><span class="mi-icon">◉</span> My accounts</div>
@@ -1176,17 +1177,23 @@ const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
-  demoUrl: '',       // link to the Tello marketing video (set to the real video URL to show the offer)
-  contactUrl: '',    // where "Contact us" goes, e.g. 'mailto:you@example.com' or a form URL
+  demoUrl: '',       // optional: link on the word "Tello" to a sample video; plain text when empty
   checkoutUrl: '',   // Buy tokens. After deploying the new ownsite-checkout set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
   buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
 };
-// Offer shown on finished builds: "Want a marketing video like Tello for your site? Contact us" (hidden until both links are set).
+// Offer shown on finished builds: "Want a marketing video like Tello for your site? Make one"
+let mpLast = null;   // { title, summary } of the last finished multi-page build
 function mktgOfferHtml() {
-  if (!OS.demoUrl || !OS.contactUrl) return '';
-  const a = (u, t) => '<a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer" style="color:var(--amber2);text-decoration:underline;">' + t + '</a>';
-  return '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-top:12px;padding-top:10px;border-top:1px solid rgba(var(--acc),0.15)">Want a marketing video like ' + a(OS.demoUrl, 'Tello') + ' for your site? ' + a(OS.contactUrl, 'Contact us') + '</div>';
+  if (!OS.buildUrl) return '';
+  const tello = OS.demoUrl ? '<a href="' + escapeHtml(OS.demoUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--amber2);text-decoration:underline;">Tello</a>' : 'Tello';
+  return '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-top:12px;padding-top:10px;border-top:1px solid rgba(var(--acc),0.15)">Want a marketing video like ' + tello + ' for your site? <a href="#" class="mk-video" style="color:var(--amber2);text-decoration:underline;">Make one</a></div>';
 }
+document.addEventListener('click', (e) => {
+  const a = e.target.closest && e.target.closest('.mk-video');
+  if (!a) return;
+  e.preventDefault();
+  mpVideoOpen();
+});
 
 let osClient = null, osUser = null, osUsage = null, osEverBought = null;
 const osEnabled = () => !!OS.anonKey;
@@ -1556,7 +1563,7 @@ async function mpBuild(d) {
   let failed = null;
   for (let i = 0; i < pages.length; i++) {
     const f = pages[i].file;
-    show('> Building page ' + (i + 1) + ' of ' + pages.length + ': ' + f + ' ...\n(Keep this tab open. Each page takes about a minute.)');
+    show(d.plan.kind === 'video' ? '> Building your video ...\n(Keep this tab open. This takes about a minute or two.)' : '> Building page ' + (i + 1) + ' of ' + pages.length + ': ' + f + ' ...\n(Keep this tab open. Each page takes about a minute.)');
     let r = null;
     for (let attempt = 0; attempt < 2 && !(r && r.html); attempt++) {
       try { r = await mpCall({ action: 'page', buildId: d.buildId, file: f }); }
@@ -1572,17 +1579,53 @@ async function mpBuild(d) {
   if (failed) {
     show('> Stopped at ' + failed.file + '. ' + failed.error + '\n\n' + got + ' of ' + pages.length + ' pages were delivered and only those were charged.');
   } else {
-    show('> All ' + pages.length + ' pages built. You were charged only for delivered pages, never above the maximum shown.');
+    show(d.plan.kind === 'video' ? '> Your video is ready. You were charged only for what was delivered, never above the maximum shown.' : '> All ' + pages.length + ' pages built. You were charged only for delivered pages, never above the maximum shown.');
   }
   if (got) mpOfferResult(d.plan, files);
+}
+
+function mpVideoOpen() {
+  if (!OS.buildUrl) return;
+  if (osEnabled() && !osUser) { addMsg('ai', '> Sign in first. Open the menu, then Account, then Sign in with Google.'); return; }
+  closePreview();
+  const msgs = document.getElementById('messages');
+  removeWelcome();
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const pre = mpLast ? 'A short marketing video for my site "' + mpLast.title + '". ' + (mpLast.summary || '') : '';
+  div.innerHTML = '<div class="build-output"><div class="build-title">▶ MARKETING VIDEO</div>' +
+    '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-bottom:10px">OwnSite writes a short animated explainer video as a single HTML file you own: a hook, your product in action, and a call to action. Tell me what it is for, who it is for, and the 3 or 4 things it should show. You will see the cost before anything is built.</div>' +
+    '<textarea class="mk-idea" rows="5" style="width:100%;padding:10px;background:var(--codebg);border:1px solid rgba(var(--acc),0.3);color:inherit;font:inherit;box-sizing:border-box" placeholder="Example: A property-manager app for small landlords. Show morning to-dos, answers about California rental law, and a nothing-slipped ending."></textarea>' +
+    '<div class="build-actions" style="margin-top:10px"><button class="build-btn primary" data-act="q">GET QUOTE</button><button class="build-btn" data-act="no">CANCEL</button></div></div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  const ta = div.querySelector('.mk-idea'); ta.value = pre; ta.focus();
+  div.querySelector('[data-act="no"]').addEventListener('click', () => div.remove());
+  div.querySelector('[data-act="q"]').addEventListener('click', async () => {
+    const idea = ta.value.trim();
+    if (idea.length < 15) { ta.placeholder = 'Please say a bit more: what it is and what the video should show.'; return; }
+    const btn = div.querySelector('[data-act="q"]'); btn.disabled = true; btn.textContent = 'ONE MOMENT...';
+    let d;
+    try { d = await mpCall({ action: 'video_start', idea }); } catch (e) { d = { error: 'Connection interrupted. Try again.' }; }
+    if (d.code === 'short') {
+      div.remove();
+      addMsg('ai', '> Not enough tokens left for a video.\n\nIt needs about ' + fmtTok(d.need) + ' reserved and you have ' + fmtTok(d.remaining) + '.' + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : ''));
+      return;
+    }
+    if (!d.buildId) { btn.disabled = false; btn.textContent = 'GET QUOTE'; addMsg('ai', '> ' + (d.code === 'limit' ? "You're out of tokens." + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : '') : (d.error || 'Could not start. Try again.'))); return; }
+    div.remove();
+    mpOfferPlan(d);
+  });
 }
 
 function mpOfferResult(plan, files) {
   const msgs = document.getElementById('messages');
   const div = document.createElement('div');
   div.className = 'msg ai';
-  div.innerHTML = '<div class="build-output"><div class="build-title">◈ ' + escapeHtml(plan.title) + ' · ' + Object.keys(files).length + ' PAGES READY</div>' +
-    '<div class="build-actions"><button class="build-btn primary" data-act="pv">▶ PREVIEW</button><button class="build-btn" data-act="zip">⬇ DOWNLOAD ZIP</button></div>' + mktgOfferHtml() + '</div>';
+  const isVideo = plan.kind === 'video';
+  if (!isVideo) mpLast = { title: plan.title, summary: plan.summary };
+  div.innerHTML = '<div class="build-output"><div class="build-title">◈ ' + escapeHtml(plan.title) + ' · ' + (isVideo ? 'VIDEO READY' : Object.keys(files).length + ' PAGES READY') + '</div>' +
+    '<div class="build-actions"><button class="build-btn primary" data-act="pv">▶ ' + (isVideo ? 'PLAY' : 'PREVIEW') + '</button><button class="build-btn" data-act="zip">' + (isVideo ? '⬇ DOWNLOAD HTML' : '⬇ DOWNLOAD ZIP') + '</button></div>' +
+    (isVideo ? '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-top:10px">Fill in every [PLACEHOLDER] with your real details before you publish. To make an MP4, play it full screen and screen-record it.</div>' : mktgOfferHtml()) + '</div>';
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
   div.querySelector('[data-act="pv"]').addEventListener('click', () => mpOpenPreview(files, 'index.html'));
   div.querySelector('[data-act="zip"]').addEventListener('click', () => mpDownloadZip(files));
@@ -1591,7 +1634,7 @@ function mpOfferResult(plan, files) {
 
 function mpOpenPreview(files, file) {
   pvFiles = files; pvCur = files[file] ? file : Object.keys(files)[0];
-  document.getElementById('pvDownload').textContent = '⬇ ZIP';
+  document.getElementById('pvDownload').textContent = Object.keys(files).length === 1 ? '⬇ HTML' : '⬇ ZIP';
   const html = files[pvCur];
   const i = html.toLowerCase().lastIndexOf('</body>');
   const guarded = i === -1 ? html + MP_PV_GUARD + PV_GUARD : html.slice(0, i) + MP_PV_GUARD + PV_GUARD + html.slice(i);
@@ -1611,6 +1654,8 @@ function mpSaveBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 async function mpDownloadZip(files) {
+  const names = Object.keys(files);
+  if (names.length === 1) { mpSaveBlob(new Blob([files[names[0]]], { type: 'text/html' }), names[0]); return; }
   try {
     if (!window.JSZip) {
       await new Promise((ok, no) => {
@@ -1713,7 +1758,7 @@ function closePreview() {
   }, 400);
 }
 
-(function(){ const m = document.getElementById('mpMenuItem'); if (m && OS.buildUrl) m.style.display = ''; })();
+(function(){ const m = document.getElementById('mpMenuItem'); if (m && OS.buildUrl) m.style.display = ''; const k = document.getElementById('mkMenuItem'); if (k && OS.buildUrl) k.style.display = ''; })();
 osInit();
 
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────

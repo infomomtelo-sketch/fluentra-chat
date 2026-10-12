@@ -1,8 +1,9 @@
 // Supabase Edge Function: ownsite-build  (deploy to the nwlhs project, Verify JWT on)
-// Multi-page static site builder. Two actions, both POST with Authorization: Bearer <user JWT>:
+// Multi-page static site builder + animated marketing video (plain HTML). Actions, both POST with Authorization: Bearer <user JWT>:
 //   { action:"plan", idea }            -> { buildId, plan, estimate, reserved, remaining, usage }
 //                                         or { handoff:true, reason } (too big for a static site)
 //                                         or { code:"short", need, remaining }
+//   { action:"video_start", idea }    -> same quote shape as plan (no AI call, free); then build with action:"page", file "video.html"
 //   { action:"page", buildId, file }   -> { file, html, usage, done }
 // Anti-trap rules: the quote is shown before anything is built; the user can never be charged more
 // than `reserved` (125% of the quote); only pages that were actually delivered are charged;
@@ -16,6 +17,7 @@ const FREE_LIMIT = 30000;       // free tokens per month; bought credits are use
 const PAGE_EST = 7000;          // tokens (input + output) quoted per page
 const RESERVE_FACTOR = 1.25;    // most a user can be charged = quote x 1.25
 const HARD_CAP_FACTOR = 2;      // we stop trying after the AI has used quote x 2 (we absorb the extra)
+const VIDEO_EST = 10000;        // tokens quoted for one marketing video
 const MAX_PAGES = 6;
 const MAX_IDEA_CHARS = 4000;
 const PLAN_MAX_TOKENS = 2500;
@@ -60,6 +62,15 @@ const pageSystem = (title: string, css: string, pages: { file: string; title: st
   "Put this shared CSS verbatim inside one <style> tag in <head>, and you may add a few page-specific rules after it:\n" + css + "\n" +
   "Include <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">. Keep CSS and JS compact and finish the page completely. " +
   RULES;
+
+const VIDEO_SYSTEM =
+  "You are OwnSite. Create ONE self-contained HTML file that plays a short animated marketing explainer video, in the style of a modern product demo: " +
+  "a portrait stage (9:16, centered, max height 100vh, soft background), 6 to 8 scenes of about 5 seconds each that advance automatically and loop. " +
+  "Each scene has: a small time or label chip, a big headline of 2 to 6 words, a simple phone mock-up drawn with CSS showing a simplified screen relevant to the product (clearly labeled \"Sample screen for illustration\"), and one short caption line at the bottom. " +
+  "Open with a hook scene (a relatable moment or problem), show the product solving it in 3 to 5 scenes, and end with a closing scene: a logo placeholder, a one-line tagline, a call-to-action button and [YOUR WEBSITE]. " +
+  "Use CSS animations and a tiny JavaScript scene timer. Add a small unobtrusive control bar with Play/Pause and Restart, a thin progress bar, and Space to pause. " +
+  "Colors: use the owner's brand colors if given, otherwise a calm professional palette. System fonts. No external images, fonts, libraries or network requests. " +
+  "Output ONLY the HTML, starting with <!doctype html> and ending with </html>. No explanation, no code fence. Keep CSS and JS compact and finish completely. " + RULES;
 
 async function allowance(uid: string) {
   const period = new Date(); period.setUTCDate(1);
@@ -163,6 +174,29 @@ async function doPlan(uid: string, idea: string) {
   return { buildId: data.id, plan, estimate, reserved, remaining, usage };
 }
 
+async function doVideoStart(uid: string, idea: string) {
+  const a = await allowance(uid);
+  const usage = usageOf(a.used, a.credits);
+  if (a.available <= 0) return { error: "You're out of tokens.", code: "limit", usage };
+  const estimate = VIDEO_EST;
+  const reserved = Math.ceil(estimate * RESERVE_FACTOR);
+  if (a.available < reserved) {
+    return { code: "short", error: "Not enough tokens left for this video.", need: reserved, remaining: a.available, estimate, usage };
+  }
+  const plan = {
+    kind: "video", title: "Marketing video", css: "", too_big: false, reason: "",
+    summary: "A short animated explainer, plain HTML you own. Preview it, download it, or screen-record it.",
+    pages: [{ file: "video.html", title: "Marketing video", purpose: idea.slice(0, 280) }],
+  };
+  const { data, error } = await admin.from("ownsite_builds")
+    .insert({ user_id: uid, idea, plan, estimate, reserved }).select("id").single();
+  if (error || !data) {
+    console.error("video insert failed", error?.message);
+    return { error: "Could not start. Try again.", code: "server", usage };
+  }
+  return { buildId: data.id, plan, estimate, reserved, remaining: a.available, usage };
+}
+
 async function doPage(uid: string, buildId: string, file: string) {
   const { data: b } = await admin.from("ownsite_builds").select("*").eq("id", buildId).eq("user_id", uid).maybeSingle();
   if (!b) return { error: "Build not found.", code: "notfound" };
@@ -179,9 +213,12 @@ async function doPage(uid: string, buildId: string, file: string) {
   }
 
   const p = plan.pages.find((x) => x.file === file)!;
+  const isVideo = (plan as Plan & { kind?: string }).kind === "video";
   const r = await claude(
-    pageSystem(plan.title, plan.css, plan.pages),
-    "Write " + file + " now (" + p.title + "). Purpose: " + p.purpose + "\nSite idea from the owner: " + String(b.idea).slice(0, MAX_IDEA_CHARS),
+    isVideo ? VIDEO_SYSTEM : pageSystem(plan.title, plan.css, plan.pages),
+    isVideo
+      ? "Create the marketing video now. What it is for:\n" + String(b.idea).slice(0, MAX_IDEA_CHARS)
+      : "Write " + file + " now (" + p.title + "). Purpose: " + p.purpose + "\nSite idea from the owner: " + String(b.idea).slice(0, MAX_IDEA_CHARS),
     PAGE_MAX_TOKENS,
   );
   if ("error" in r) return { ...r, usage };
@@ -221,6 +258,9 @@ Deno.serve(async (req) => {
   if (action === "plan") {
     const idea = typeof body.idea === "string" ? body.idea.trim().slice(0, MAX_IDEA_CHARS) : "";
     if (!idea) return json({ error: "Describe the site you want.", code: "input" }, 400);
+  } else if (action === "video_start") {
+    const idea = typeof body.idea === "string" ? body.idea.trim().slice(0, MAX_IDEA_CHARS) : "";
+    if (!idea) return json({ error: "Tell me what the video is for.", code: "input" }, 400);
   } else if (action === "page") {
     if (typeof body.buildId !== "string" || typeof body.file !== "string") return json({ error: "Bad request.", code: "input" }, 400);
   } else return json({ error: "Unknown action.", code: "input" }, 400);
@@ -233,7 +273,9 @@ Deno.serve(async (req) => {
       try {
         const out = action === "plan"
           ? await doPlan(uid, String(body.idea).trim().slice(0, MAX_IDEA_CHARS))
-          : await doPage(uid, body.buildId, body.file);
+          : action === "video_start"
+            ? await doVideoStart(uid, String(body.idea).trim().slice(0, MAX_IDEA_CHARS))
+            : await doPage(uid, body.buildId, body.file);
         c.enqueue(enc.encode(JSON.stringify(out)));
       } catch (e) {
         console.error("ownsite-build error", e);
