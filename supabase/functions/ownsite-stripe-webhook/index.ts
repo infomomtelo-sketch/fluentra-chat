@@ -2,7 +2,7 @@
 // IMPORTANT: turn OFF "Verify JWT" for this function (Stripe does not send one).
 // Stripe endpoint URL: https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-stripe-webhook
 // Events to send: checkout.session.completed, customer.subscription.deleted
-// Secrets: STRIPE_WEBHOOK_SECRET (whsec_...). SUPABASE_URL / SERVICE_ROLE are built in.
+// Secrets: OWNSITE_STRIPE_WEBHOOK_SECRET (whsec_...). SUPABASE_URL / SERVICE_ROLE are built in.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const admin = createClient(
@@ -33,7 +33,7 @@ async function verify(raw: string, header: string, secret: string): Promise<bool
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return fail("POST only", 405);
-  const secret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const secret = Deno.env.get("OWNSITE_STRIPE_WEBHOOK_SECRET");
   if (!secret) return fail("not configured", 500);
 
   const raw = await req.text();

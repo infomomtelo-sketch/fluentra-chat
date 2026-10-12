@@ -1,7 +1,7 @@
 // Supabase Edge Function: ownsite-checkout  (deploy to the nwlhs project)
 // Request:  POST {}  with  Authorization: Bearer <user JWT>
 // Response: { url } (Stripe Checkout) or { error, code }
-// Secrets: STRIPE_SECRET_KEY (restricted key: Checkout Sessions Write, Customers Write)
+// Secrets: OWNSITE_STRIPE_KEY (restricted key: Checkout Sessions Write, Customers Write)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const PRICE_ID = "price_1UPVEkAH9qPFLg89OVEmuLOh"; // OwnSite Pro, $19 / month
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
-  const key = Deno.env.get("STRIPE_SECRET_KEY");
+  const key = Deno.env.get("OWNSITE_STRIPE_KEY");
   if (!key) return json({ error: "Checkout is not set up yet.", code: "server" }, 500);
 
   const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
