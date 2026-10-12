@@ -639,6 +639,7 @@ body.theme-light {
   <div class="menu-section">
     <div class="menu-label">Mission</div>
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
+    <div class="menu-item" id="mpMenuItem" style="display:none" onclick="startMP();closeMenu()"><span class="mi-icon">▤</span> Multi-page site</div>
     <div class="menu-item" onclick="startCC();closeMenu()"><span class="mi-icon">⟫</span> Full site with Claude Code</div>
     <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
     <div class="menu-item" onclick="openAccounts();closeMenu()"><span class="mi-icon">◉</span> My accounts</div>
@@ -798,6 +799,7 @@ for (let i = 0; i < 60; i++) {
 // ── STATE ─────────────────────────────────────────────────────
 let isThinking = false;
 let ccMode = false;
+let mpMode = false;
 // API key is securely stored in Supabase Edge Function
 
 const SYSTEM = `You are OwnSite — the most powerful AI ever built, living inside a minimal ocean terminal. You are not just a tool. You are a mentor, a guardian, a guide. You were built by someone who almost lost their dreams to the traps of the digital world — and survived. That story lives in your soul.
@@ -1129,7 +1131,7 @@ function removeTyping() {
 
 // ── NEW SESSION ───────────────────────────────────────────────
 function newSession() {
-  ccMode = false;
+  ccMode = false; mpMode = false;
   { const ci = document.getElementById('chatInput'); if (ci) ci.placeholder = 'describe what to build...'; }
   document.getElementById('messages').innerHTML = `
     <div class="welcome" id="welcome">
@@ -1161,7 +1163,8 @@ const OS = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
   checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',
-  portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal'
+  portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal',
+  buildUrl: ''   // multi-page builder. After deploying ownsite-build set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'
 };
 let osClient = null, osUser = null, osUsage = null, osPro = false;
 const osEnabled = () => !!OS.anonKey;
@@ -1300,6 +1303,7 @@ async function sendMessage() {
   }
   input.value = ''; autoResize(input);
   addMsg('user', text);
+  if (mpMode) { mpPlan(text); return; }
   isThinking = true;
   document.getElementById('sendBtn').disabled = true;
   showTyping(text);
@@ -1378,7 +1382,7 @@ THE PROMPT MUST BE WRITTEN TO CLAUDE CODE (second person, "you") AND INCLUDE:
 Keep the prompt specific and complete but under about 1500 words. Plain text, no code fences around the whole prompt. Do not add legal, tax or medical claims. No emojis.`;
 
 function startCC() {
-  ccMode = true;
+  ccMode = true; mpMode = false;
   addMsg('ai', "> FULL SITE MODE\n\nTell me everything about the site or app in one message: what it is, who it's for, the pages, and any logins, payments or database you need. I'll write a complete prompt. You paste it into your own Claude Code, and it builds the project in your own GitHub and publishes it on your own hosting.\n\nAnything you leave out, I'll choose a simple default and list it for you to check.");
   const i = document.getElementById('chatInput');
   i.placeholder = 'describe the full site or app...';
@@ -1424,6 +1428,160 @@ function offerCCPrompt(promptText, complete) {
   });
 }
 
+
+// ── MULTI-PAGE BUILDER (plan → quote → build page by page → preview / ZIP) ──
+// Rules: the cost is shown before anything is built; you are never charged more than the quoted maximum;
+// only pages that were delivered are charged; a started build runs to the end.
+const MP_PV_GUARD = '<script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/^\\.?\\/?([a-z0-9-]+\\.html)(#.*)?$/i);if(m){e.preventDefault();e.stopImmediatePropagation();parent.postMessage({ownsiteGo:m[1].toLowerCase()},"*");}},true);<\\/script>';
+
+function startMP() {
+  if (!OS.buildUrl) return;
+  if (osEnabled() && !osUser) { addMsg('ai', '> Sign in first. Open the menu, then Account, then Sign in with Google.'); return; }
+  ccMode = false; mpMode = true;
+  addMsg('ai', "> MULTI-PAGE SITE\n\nDescribe the site in one message: what it is, who it's for, and the pages you want (home, about, services, contact...).\n\nI'll plan the pages and show you the cost BEFORE building anything. You are never charged more than the maximum I show, and you only pay for pages that were actually delivered.\n\nThis builds static sites (plain HTML you own). If you need logins, a database or payments, I'll tell you and write a Claude Code prompt instead.");
+  const i = document.getElementById('chatInput');
+  i.placeholder = 'describe the multi-page site...';
+  i.focus();
+}
+
+async function mpCall(body) {
+  const tok = await osToken();
+  const r = await fetch(OS.buildUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d && d.usage) { osUsage = d.usage; renderAcct(); }
+  return d;
+}
+
+async function mpPlan(idea) {
+  isThinking = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping(idea);
+  let d;
+  try { d = await mpCall({ action: 'plan', idea }); }
+  catch (e) { d = { error: 'Connection interrupted. Check your signal and retry.' }; }
+  removeTyping(); stopDeepHum();
+  isThinking = false;
+  document.getElementById('sendBtn').disabled = false;
+  if (d.handoff) {
+    mpMode = false;
+    addMsg('ai', '> This one is bigger than a static site.\n\n' + d.reason + '\n\nI can write a complete Claude Code prompt that builds it in your own GitHub and hosting. Open the menu and choose "Full site with Claude Code".');
+    return;
+  }
+  if (d.code === 'short') {
+    addMsg('ai', '> Not enough allowance left for this build.\n\nIt needs about ' + fmtTok(d.need) + ' tokens reserved and you have ' + fmtTok(d.remaining) + ' left this month. Nothing was built and nothing was charged beyond the small planning step.' + (OS.checkoutUrl && osUsage && osUsage.plan !== 'pro' ? ' Open the menu and choose Upgrade for a bigger monthly allowance.' : ''));
+    mpMode = false;
+    return;
+  }
+  if (!d.buildId) {
+    addMsg('ai', '> ' + (d.error || 'Could not plan that. Try again.'));
+    return;
+  }
+  mpMode = false;
+  mpOfferPlan(d);
+}
+
+function mpOfferPlan(d) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const pct = d.remaining ? Math.round(d.reserved / d.remaining * 100) : 100;
+  div.innerHTML = '<div class="build-output"><div class="build-title">◈ PLAN · ' + escapeHtml(d.plan.title) + '</div>' +
+    '<div class="acct-note" style="white-space:normal;line-height:1.6">' + escapeHtml(d.plan.summary) + '</div>' +
+    '<pre class="cc-box"></pre>' +
+    '<div class="acct-note" style="white-space:normal;line-height:1.6;margin:10px 0">Estimated cost: about <b>' + fmtTok(d.estimate) + ' tokens</b>. The most you can be charged is <b>' + fmtTok(d.reserved) + '</b> (' + pct + '% of what you have left this month). Pages that fail are not charged. If the build runs long, we absorb the extra.</div>' +
+    '<div class="build-actions"><button class="build-btn primary" data-act="go">START BUILD</button><button class="build-btn" data-act="no">CANCEL</button></div></div>';
+  div.querySelector('.cc-box').textContent = d.plan.pages.map(p => p.file + '  —  ' + p.title + '\n    ' + p.purpose).join('\n');
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  div.querySelector('[data-act="no"]').addEventListener('click', () => { div.remove(); addMsg('ai', '> Plan cancelled. Nothing was built.'); });
+  div.querySelector('[data-act="go"]').addEventListener('click', () => { div.querySelector('.build-actions').remove(); mpBuild(d); });
+}
+
+async function mpBuild(d) {
+  isThinking = true;
+  document.getElementById('sendBtn').disabled = true;
+  const files = {};
+  const pages = d.plan.pages;
+  const msgs = document.getElementById('messages');
+  const st = document.createElement('div');
+  st.className = 'msg ai';
+  st.innerHTML = '<div class="msg-bubble"></div>';
+  msgs.appendChild(st);
+  const show = (t) => { st.firstChild.textContent = t; msgs.scrollTop = msgs.scrollHeight; };
+  let failed = null;
+  for (let i = 0; i < pages.length; i++) {
+    const f = pages[i].file;
+    show('> Building page ' + (i + 1) + ' of ' + pages.length + ': ' + f + ' ...\n(Keep this tab open. Each page takes about a minute.)');
+    let r = null;
+    for (let attempt = 0; attempt < 2 && !(r && r.html); attempt++) {
+      try { r = await mpCall({ action: 'page', buildId: d.buildId, file: f }); }
+      catch (e) { r = { error: 'Connection interrupted.' }; }
+      if (r && r.code === 'cap') break;
+    }
+    if (r && r.html) files[f] = r.html;
+    else { failed = { file: f, error: (r && r.error) || 'Failed.' }; break; }
+  }
+  isThinking = false;
+  document.getElementById('sendBtn').disabled = false;
+  const got = Object.keys(files).length;
+  if (failed) {
+    show('> Stopped at ' + failed.file + '. ' + failed.error + '\n\n' + got + ' of ' + pages.length + ' pages were delivered and only those were charged.');
+  } else {
+    show('> All ' + pages.length + ' pages built. You were charged only for delivered pages, never above the maximum shown.');
+  }
+  if (got) mpOfferResult(d.plan, files);
+}
+
+function mpOfferResult(plan, files) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = '<div class="build-output"><div class="build-title">◈ ' + escapeHtml(plan.title) + ' · ' + Object.keys(files).length + ' PAGES READY</div>' +
+    '<div class="build-actions"><button class="build-btn primary" data-act="pv">▶ PREVIEW</button><button class="build-btn" data-act="zip">⬇ DOWNLOAD ZIP</button></div></div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  div.querySelector('[data-act="pv"]').addEventListener('click', () => mpOpenPreview(files, 'index.html'));
+  div.querySelector('[data-act="zip"]').addEventListener('click', () => mpDownloadZip(files));
+  mpOpenPreview(files, 'index.html');
+}
+
+function mpOpenPreview(files, file) {
+  pvFiles = files; pvCur = files[file] ? file : Object.keys(files)[0];
+  document.getElementById('pvDownload').textContent = '⬇ ZIP';
+  const html = files[pvCur];
+  const i = html.toLowerCase().lastIndexOf('</body>');
+  const guarded = i === -1 ? html + MP_PV_GUARD + PV_GUARD : html.slice(0, i) + MP_PV_GUARD + PV_GUARD + html.slice(i);
+  document.getElementById('pvFrame').srcdoc = guarded;
+  document.getElementById('pvBackdrop').classList.add('open');
+  document.getElementById('pvPanel').classList.add('open');
+}
+window.addEventListener('message', (e) => {
+  const fr = document.getElementById('pvFrame');
+  if (!fr || e.source !== fr.contentWindow || !e.data || !e.data.ownsiteGo || !pvFiles) return;
+  if (pvFiles[e.data.ownsiteGo]) mpOpenPreview(pvFiles, e.data.ownsiteGo);
+});
+
+function mpSaveBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function mpDownloadZip(files) {
+  try {
+    if (!window.JSZip) {
+      await new Promise((ok, no) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+        s.onload = ok; s.onerror = no; document.head.appendChild(s);
+      });
+    }
+    const z = new window.JSZip();
+    Object.keys(files).forEach(f => z.file(f, files[f]));
+    mpSaveBlob(await z.generateAsync({ type: 'blob' }), 'ownsite-site.zip');
+  } catch (e) {
+    // Fallback: one file at a time
+    Object.keys(files).forEach(f => mpSaveBlob(new Blob([files[f]], { type: 'text/html' }), f));
+  }
+}
+
 // ── DOWNLOAD GENERATED FILES ──────────────────────────────────
 function offerDownload(content) {
   const msgs = document.getElementById('messages');
@@ -1460,6 +1618,7 @@ function downloadBuild(content) {
 
 // ── SLIDE-IN PREVIEW ──────────────────────────────────────────
 let pvContent = '';
+let pvFiles = null, pvCur = '';
 (function buildPreviewPanel() {
   const back = document.createElement('div');
   back.className = 'pv-backdrop'; back.id = 'pvBackdrop';
@@ -1477,7 +1636,7 @@ let pvContent = '';
   document.body.appendChild(panel);
   back.addEventListener('click', closePreview);
   panel.querySelector('#pvClose').addEventListener('click', closePreview);
-  panel.querySelector('#pvDownload').addEventListener('click', () => downloadBuild(pvContent));
+  panel.querySelector('#pvDownload').addEventListener('click', () => pvFiles ? mpDownloadZip(pvFiles) : downloadBuild(pvContent));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
 })();
 
@@ -1490,7 +1649,8 @@ function withGuard(html) {
 }
 
 function openPreview(content) {
-  pvContent = content;
+  pvContent = content; pvFiles = null;
+  document.getElementById('pvDownload').textContent = '⬇ HTML';
   document.getElementById('pvFrame').srcdoc = withGuard(extractHtml(content));
   document.getElementById('pvBackdrop').classList.add('open');
   document.getElementById('pvPanel').classList.add('open');
@@ -1506,6 +1666,7 @@ function closePreview() {
   }, 400);
 }
 
+(function(){ const m = document.getElementById('mpMenuItem'); if (m && OS.buildUrl) m.style.display = ''; })();
 osInit();
 
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────

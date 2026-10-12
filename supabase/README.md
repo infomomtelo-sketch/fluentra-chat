@@ -21,3 +21,9 @@
 7. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout`.
 8. Manage subscription (cancel, card, invoices): Stripe > Settings > Billing > Customer portal > activate (live mode, allow cancel). Give the restricted key Subscriptions: Read + Customer portal: Write. Deploy `ownsite-portal` (Verify JWT on). `OS.portalUrl` in `index.html` points to it.
    Optional: create a separate portal configuration for OwnSite and set secret `OWNSITE_PORTAL_CONFIG` (bpc_...) so Title22's portal settings and branding are not shared.
+
+## Multi-page builder
+1. Run `supabase/ownsite_builds.sql` in the nwlhs SQL editor.
+2. Deploy `ownsite-build` (Verify JWT on). Uses the existing `ANTHROPIC_API_KEY`.
+3. In `index.html` set `OS.buildUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build` (the menu item "Multi-page site" appears only when it is set).
+Rules built in: cost quoted before building; max charge = 125% of the quote; only delivered pages are charged; failed or cut-off pages are free; the AI's cost beyond the reserve is absorbed.
