@@ -1176,9 +1176,18 @@ const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
+  demoUrl: '',       // link to the Tello marketing video (set to the real video URL to show the offer)
+  contactUrl: '',    // where "Contact us" goes, e.g. 'mailto:you@example.com' or a form URL
   checkoutUrl: '',   // Buy tokens. After deploying the new ownsite-checkout set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
   buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
 };
+// Offer shown on finished builds: "Want a marketing video like Tello for your site? Contact us" (hidden until both links are set).
+function mktgOfferHtml() {
+  if (!OS.demoUrl || !OS.contactUrl) return '';
+  const a = (u, t) => '<a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer" style="color:var(--amber2);text-decoration:underline;">' + t + '</a>';
+  return '<div class="acct-note" style="white-space:normal;line-height:1.6;margin-top:12px;padding-top:10px;border-top:1px solid rgba(var(--acc),0.15)">Want a marketing video like ' + a(OS.demoUrl, 'Tello') + ' for your site? ' + a(OS.contactUrl, 'Contact us') + '</div>';
+}
+
 let osClient = null, osUser = null, osUsage = null, osEverBought = null;
 const osEnabled = () => !!OS.anonKey;
 
@@ -1573,7 +1582,7 @@ function mpOfferResult(plan, files) {
   const div = document.createElement('div');
   div.className = 'msg ai';
   div.innerHTML = '<div class="build-output"><div class="build-title">◈ ' + escapeHtml(plan.title) + ' · ' + Object.keys(files).length + ' PAGES READY</div>' +
-    '<div class="build-actions"><button class="build-btn primary" data-act="pv">▶ PREVIEW</button><button class="build-btn" data-act="zip">⬇ DOWNLOAD ZIP</button></div></div>';
+    '<div class="build-actions"><button class="build-btn primary" data-act="pv">▶ PREVIEW</button><button class="build-btn" data-act="zip">⬇ DOWNLOAD ZIP</button></div>' + mktgOfferHtml() + '</div>';
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
   div.querySelector('[data-act="pv"]').addEventListener('click', () => mpOpenPreview(files, 'index.html'));
   div.querySelector('[data-act="zip"]').addEventListener('click', () => mpDownloadZip(files));
@@ -1633,6 +1642,7 @@ function offerDownload(content) {
         <button class="build-btn" data-act="download">⬇ DOWNLOAD HTML</button>
         <button class="build-btn" data-act="dismiss">DISMISS</button>
       </div>
+      ${mktgOfferHtml()}
     </div>`;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
