@@ -1164,7 +1164,7 @@ const OS = {
   siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
   checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',
   portalUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-portal',
-  buildUrl: ''   // multi-page builder. After deploying ownsite-build set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'
+  buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
 };
 let osClient = null, osUser = null, osUsage = null, osPro = false;
 const osEnabled = () => !!OS.anonKey;
