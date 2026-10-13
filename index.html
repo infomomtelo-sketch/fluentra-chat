@@ -1030,10 +1030,36 @@ document.addEventListener('click', (e) => {
   sendMessage();
 });
 
+// ── TELLO, FROM TELLO.LIVE ────────────────────────────────────
+// tello.live sends business owners with no website here (?from=tello&tello=<id>&business=...&about=...).
+// That business's Tello chat line is then added to every page built here: preview, download and saved builds.
+// Kept on this device so it survives the Google sign-in redirect.
+const TELLO_KEY = 'ownsite_tello';
+let TELLO = null;
+try { TELLO = JSON.parse(localStorage.getItem(TELLO_KEY) || 'null'); if (!TELLO || !/^[a-f0-9]{10}$/.test(TELLO.id)) TELLO = null; } catch (e) { TELLO = null; }
+try {
+  const q = new URLSearchParams(location.search), tid = q.get('tello') || '';
+  if (q.get('from') === 'tello' && /^[a-f0-9]{10}$/.test(tid)) {
+    TELLO = { id: tid, business: (q.get('business') || '').slice(0, 80), about: (q.get('about') || '').slice(0, 1200), fresh: true };
+    try { localStorage.setItem(TELLO_KEY, JSON.stringify(TELLO)); } catch (e) {}
+    history.replaceState(null, '', location.pathname);
+  }
+} catch (e) {}
+function telloSave() { try { localStorage.setItem(TELLO_KEY, JSON.stringify(TELLO)); } catch (e) {} }
+function withTello(html) {
+  if (!TELLO || !html || html.indexOf('tello.live/embed/') !== -1) return html;
+  const line = '<script src="https://tello.live/embed/' + TELLO.id + '.js" async><\/script>';
+  const i = html.search(/<\/body>/i);
+  return i === -1 ? html + '\n' + line + '\n' : html.slice(0, i) + line + '\n' + html.slice(i);
+}
+function telloNote() {
+  return TELLO ? '\n\n━━━ THIS PERSON CAME FROM TELLO.LIVE ━━━\nThey already have a Tello for ' + (TELLO.business || 'their business') + '. OwnSite adds their Tello chat to every page they build here automatically, so never write your own chat widget or chat button, and never warn them about Tello. If they ask, say their Tello chat is already on every page.' : '';
+}
+
 // Pull the HTML out of an AI reply (fenced, unclosed-fence, or bare).
 function extractHtml(content) {
   const m = content.match(/```(?:html)?[ \t]*\n?([\s\S]*?)(?:```|$)/i);
-  return (m ? m[1] : content).trim();
+  return withTello((m ? m[1] : content).trim());
 }
 
 function addMsg(role, text) {
@@ -1358,6 +1384,7 @@ async function sendMessage() {
     return;
   }
   input.value = ''; autoResize(input);
+  if (TELLO && TELLO.fresh) { TELLO.fresh = false; telloSave(); }
   addMsg('user', text);
   if (mpMode) { mpPlan(text); return; }
   isThinking = true;
@@ -1375,7 +1402,7 @@ async function sendMessage() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: hdrs,
-      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM, userMessage: text, mode: ccMode ? 'handoff' : '' })
+      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM + telloNote(), userMessage: text, mode: ccMode ? 'handoff' : '' })
     });
     const data = await res.json();
     if (data.usage) { osUsage = data.usage; renderAcct(); }
@@ -1580,7 +1607,7 @@ async function mpBuild(d) {
       catch (e) { r = { error: 'Connection interrupted.' }; }
       if (r && r.code === 'cap') break;
     }
-    if (r && r.html) files[f] = r.html;
+    if (r && r.html) files[f] = d.plan.kind === 'video' ? r.html : withTello(r.html);
     else { failed = { file: f, error: (r && r.error) || 'Failed.' }; break; }
   }
   isThinking = false;
@@ -1770,6 +1797,16 @@ function closePreview() {
 
 (function(){ const m = document.getElementById('mpMenuItem'); if (m && OS.buildUrl) m.style.display = ''; const k = document.getElementById('mkMenuItem'); if (k && OS.buildUrl) k.style.display = ''; })();
 osInit();
+
+// Arrived from tello.live: say what happens and fill in the build request (shown again after signing in, until sent).
+if (TELLO && TELLO.fresh) {
+  setTimeout(() => {
+    const who = TELLO.business || 'your business';
+    addMsg('ai', '> Welcome from tello.live.\n\nLet\'s build a website for ' + who + '. Your Tello chat is added to every page you build here, so customers can ask it questions.\n\n' + 'Check the request below, then press SEND. (You may be asked to sign in first.) For a site with several pages, open the menu and choose Multi-page site.\n\nWhen it is ready, download it and put it online. The menu has a checklist of the free accounts you need, and your site stays yours.');
+    const input = document.getElementById('chatInput');
+    if (input && !input.value) { input.value = ('Build a one-page website for ' + who + '.' + (TELLO.about ? ' About the business: ' + TELLO.about : '')).slice(0, 2000); autoResize(input); }
+  }, 900);
+}
 
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────
 let audioCtx = null;
