@@ -1806,6 +1806,8 @@ if (ON_TELLO) {
   document.title = 'Build your website | tello.live';
   const tag = document.querySelector('.hdr-tag');
   if (tag) { tag.textContent = 'ON TELLO.LIVE · POWERED BY OWNSITE'; }
+  const logo = document.querySelector('.logo');
+  if (logo) [].forEach.call(logo.childNodes, (n) => { if (n.nodeType === 3 && n.textContent.trim() === 'OWNSITE') n.textContent = ' TELLO.LIVE '; });
   const menuLogo = document.querySelector('.menu-logo');
   if (menuLogo) {
     const back = document.createElement('div'); back.className = 'menu-item';
@@ -1819,7 +1821,7 @@ if (ON_TELLO) {
 if (TELLO && TELLO.fresh) {
   setTimeout(() => {
     const who = TELLO.business || 'your business';
-    addMsg('ai', '> Welcome from tello.live.\n\nLet\'s build a website for ' + who + '. Your Tello chat is added to every page you build here, so customers can ask it questions.\n\n' + 'Check the request below, then press SEND. (You may be asked to sign in first.) For a site with several pages, open the menu and choose Multi-page site.\n\nWhen it is ready, download it and put it online. The menu has a checklist of the free accounts you need, and your site stays yours.');
+    addMsg('ai', (ON_TELLO ? '> Your website builder.' : '> Welcome from tello.live.') + '\n\nLet\'s build a website for ' + who + '. Your Tello chat is added to every page you build here, so customers can ask it questions.\n\n' + 'Check the request below, then press SEND. (You may be asked to sign in first.) For a site with several pages, open the menu and choose Multi-page site.\n\nWhen it is ready, download it and put it online. The menu has a checklist of the free accounts you need, and your site stays yours.');
     const input = document.getElementById('chatInput');
     if (input && !input.value) { input.value = ('Build a one-page website for ' + who + '.' + (TELLO.about ? ' About the business: ' + TELLO.about : '')).slice(0, 2000); autoResize(input); }
   }, 900);
