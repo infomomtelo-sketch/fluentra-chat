@@ -641,7 +641,7 @@ body.theme-light {
     <div class="menu-item active" onclick="newSession();closeMenu()"><span class="mi-icon">⟫</span> New session</div>
     <div class="menu-item" id="mpMenuItem" style="display:none" onclick="startMP();closeMenu()"><span class="mi-icon">▤</span> Multi-page site</div>
     <div class="menu-item" id="mkMenuItem" style="display:none" onclick="mpVideoOpen();closeMenu()"><span class="mi-icon">▶</span> Marketing video</div>
-    <div class="menu-item" onclick="location.href='/feature-video'"><span class="mi-icon">▶</span> Feature video maker (free)</div>
+    <div class="menu-item" onclick="location.href=(location.hostname==='tello.live'?'https://ownsite.app':'')+'/feature-video'"><span class="mi-icon">▶</span> Feature video maker (free)</div>
     <div class="menu-item" onclick="startCC();closeMenu()"><span class="mi-icon">⟫</span> Full site with Claude Code</div>
     <div class="menu-item" onclick="openMyBuilds();closeMenu()"><span class="mi-icon">◈</span> My builds</div>
     <div class="menu-item" onclick="openAccounts();closeMenu()"><span class="mi-icon">◉</span> My accounts</div>
@@ -1212,10 +1212,13 @@ function newSession() {
 
 // ── ACCOUNT, SIGN-IN, USAGE ───────────────────────────────────
 // Sign-in and the usage meter turn on when OS.anonKey is filled in.
+// The same page runs at ownsite.app and inside tello.live (tello.live/build serves this file): same engine,
+// same sign-in and token allowance; only the sign-in return address and a few labels change.
+const ON_TELLO = location.hostname === 'tello.live';
 const OS = {
   url: 'https://nwlhsshvqmbhemhxcran.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
-  siteUrl: 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
+  siteUrl: ON_TELLO ? 'https://tello.live/build' : 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
   demoUrl: 'https://ecrentalpm.com/videos',       // optional: link on the word "Tello" to a sample video; plain text when empty
   checkoutUrl: '',   // Buy tokens. After deploying the new ownsite-checkout set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
   buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
@@ -1801,11 +1804,27 @@ function closePreview() {
 (function(){ const m = document.getElementById('mpMenuItem'); if (m && OS.buildUrl) m.style.display = ''; const k = document.getElementById('mkMenuItem'); if (k && OS.buildUrl) k.style.display = ''; })();
 osInit();
 
+// Inside tello.live: say where you are and offer the way back. Everything else is OwnSite as usual.
+if (ON_TELLO) {
+  document.title = 'Build your website | tello.live';
+  const tag = document.querySelector('.hdr-tag');
+  if (tag) { tag.textContent = 'ON TELLO.LIVE · POWERED BY OWNSITE'; }
+  const logo = document.querySelector('.logo');
+  if (logo) [].forEach.call(logo.childNodes, (n) => { if (n.nodeType === 3 && n.textContent.trim() === 'OWNSITE') n.textContent = ' TELLO.LIVE '; });
+  const menuLogo = document.querySelector('.menu-logo');
+  if (menuLogo) {
+    const back = document.createElement('div'); back.className = 'menu-item';
+    back.innerHTML = '<span class="mi-icon">←</span> Back to tello.live';
+    back.addEventListener('click', () => { location.href = 'https://tello.live/'; });
+    menuLogo.insertAdjacentElement('afterend', back);
+  }
+}
+
 // Arrived from tello.live: say what happens and fill in the build request (shown again after signing in, until sent).
 if (TELLO && TELLO.fresh) {
   setTimeout(() => {
     const who = TELLO.business || 'your business';
-    addMsg('ai', '> Welcome from tello.live.\n\nLet\'s build a website for ' + who + '. Your Tello chat is added to every page you build here, so customers can ask it questions.\n\n' + 'Check the request below, then press SEND. (You may be asked to sign in first.) For a site with several pages, open the menu and choose Multi-page site.\n\nWhen it is ready, download it and put it online. The menu has a checklist of the free accounts you need, and your site stays yours.');
+    addMsg('ai', (ON_TELLO ? '> Your website builder.' : '> Welcome from tello.live.') + '\n\nLet\'s build a website for ' + who + '. Your Tello chat is added to every page you build here, so customers can ask it questions.\n\n' + 'Check the request below, then press SEND. (You may be asked to sign in first.) For a site with several pages, open the menu and choose Multi-page site.\n\nWhen it is ready, download it and put it online. The menu has a checklist of the free accounts you need, and your site stays yours.');
     const input = document.getElementById('chatInput');
     if (input && !input.value) { input.value = ('Build a one-page website for ' + who + '.' + (TELLO.about ? ' About the business: ' + TELLO.about : '')).slice(0, 2000); autoResize(input); }
   }, 900);
