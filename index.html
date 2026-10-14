@@ -1052,6 +1052,9 @@ function withTello(html) {
   const i = html.search(/<\/body>/i);
   return i === -1 ? html + '\n' + line + '\n' : html.slice(0, i) + line + '\n' + html.slice(i);
 }
+function telloCC() {
+  return TELLO ? '\n\n━━━ THIS PERSON HAS A TELLO CHAT FROM TELLO.LIVE ━━━\nThe Claude Code prompt you write MUST tell Claude Code to add this exact line just before </body> on every page of the site, unchanged:\n<script src="https://tello.live/embed/' + TELLO.id + '.js" async><\/script>\nand to not build any other chat widget. Say in the prompt that it is ' + (TELLO.business ? TELLO.business + "'s" : 'their') + ' Tello AI assistant from tello.live.' : '';
+}
 function telloNote() {
   return TELLO ? '\n\n━━━ THIS PERSON CAME FROM TELLO.LIVE ━━━\nThey already have a Tello for ' + (TELLO.business || 'their business') + '. OwnSite adds their Tello chat to every page they build here automatically, so never write your own chat widget or chat button, and never warn them about Tello. If they ask, say their Tello chat is already on every page.' : '';
 }
@@ -1402,7 +1405,7 @@ async function sendMessage() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: hdrs,
-      body: JSON.stringify({ system: ccMode ? CC_SYSTEM : SYSTEM + telloNote(), userMessage: text, mode: ccMode ? 'handoff' : '' })
+      body: JSON.stringify({ system: ccMode ? CC_SYSTEM + telloCC() : SYSTEM + telloNote(), userMessage: text, mode: ccMode ? 'handoff' : '' })
     });
     const data = await res.json();
     if (data.usage) { osUsage = data.usage; renderAcct(); }
