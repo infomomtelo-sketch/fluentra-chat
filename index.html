@@ -1350,7 +1350,10 @@ function osBuyOpen() {
     try {
       const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: JSON.stringify({ dollars, return_to: OS.siteUrl }) });
       const d = await r.json();
-      if (d.url) { window.location.href = d.url; return; }
+      // Only follow the link if the server confirms a one-time purchase of exactly what was picked.
+      // (An old deployed checkout would answer with a different product, such as a subscription.)
+      if (d.url && d.dollars === dollars && d.tokens === dollars * TOK_PER_DOLLAR) { window.location.href = d.url; return; }
+      if (d.url) { addMsg('ai', '> Token checkout is being updated and is not available right now. You have not been charged. Please try again later.'); return; }
       addMsg('ai', '> ' + (d.error || 'Could not start checkout. Try again.'));
     } catch (e) { addMsg('ai', '> Could not start checkout. Check your connection and try again.'); }
   });

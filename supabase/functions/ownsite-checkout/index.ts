@@ -83,5 +83,6 @@ Deno.serve(async (req) => {
     console.error("stripe checkout error", r.status, JSON.stringify(d?.error ?? d));
     return json({ error: "Could not start checkout. Try again.", code: "upstream" }, 502);
   }
-  return json({ url: d.url });
+  // dollars + tokens let the page confirm this is the one-time token checkout (the old $19 plan version never returned them).
+  return json({ url: d.url, dollars, tokens });
 });
