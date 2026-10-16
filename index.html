@@ -1220,7 +1220,7 @@ const OS = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bGhzc2h2cW1iaGVtaHhjcmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzOTIsImV4cCI6MjA5NTU2NzM5Mn0.2yASMx57IUNjEW8bMs8FwXnIz4cLsE1ftqD35QAOqE8',   // nwlhs anon (public) key
   siteUrl: ON_TELLO ? 'https://tello.live/build' : 'https://ownsite.app/',  // exact redirect domain (never window.location.origin)
   demoUrl: 'https://ecrentalpm.com/videos',       // optional: link on the word "Tello" to a sample video; plain text when empty
-  checkoutUrl: '',   // Buy tokens. After deploying the new ownsite-checkout set to 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout'
+  checkoutUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout',   // Buy tokens (one-time Stripe payment). Set '' to hide.
   buildUrl: 'https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-build'   // multi-page builder; set '' to hide it
 };
 // Offer shown on finished builds: "Want a marketing video like Tello for your site? Make one"
@@ -1303,6 +1303,23 @@ async function osToken() {
   const { data } = await osClient.auth.getSession();
   return data.session ? data.session.access_token : null;
 }
+// A message with a BUY TOKENS button under it (out-of-tokens, locked, not-enough-for-build).
+function addBuyMsg(text) {
+  addMsg('ai', text);
+  if (!OS.checkoutUrl) return;
+  const bubbles = document.querySelectorAll('#messages .msg.ai .msg-bubble');
+  const last = bubbles[bubbles.length - 1];
+  if (!last) return;
+  const row = document.createElement('div');
+  row.className = 'build-actions';
+  const b = document.createElement('button');
+  b.className = 'build-btn primary';
+  b.textContent = '◈ BUY TOKENS';
+  b.addEventListener('click', () => osBuyOpen());
+  row.appendChild(b);
+  last.appendChild(row);
+  const msgs = document.getElementById('messages'); if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
 // ── BUY TOKENS (one-time payment; no subscription) ─────────────
 const TOK_PER_DOLLAR = 50000;   // $20 per 1M tokens
 function osBuyOpen() {
@@ -1331,7 +1348,7 @@ function osBuyOpen() {
     const tok = await osToken();
     if (!tok) return;
     try {
-      const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: JSON.stringify({ dollars }) });
+      const r = await fetch(OS.checkoutUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, apikey: OS.anonKey }, body: JSON.stringify({ dollars, return_to: OS.siteUrl }) });
       const d = await r.json();
       if (d.url) { window.location.href = d.url; return; }
       addMsg('ai', '> ' + (d.error || 'Could not start checkout. Try again.'));
@@ -1432,10 +1449,10 @@ async function sendMessage() {
         }
       }
     } else if (data.code === 'limit') {
-      addMsg('ai', "> You're out of tokens. Your free tokens reset next month. Open the menu and choose Buy tokens to keep building now.");
+      addBuyMsg("> You're out of tokens. Your free tokens reset next month, or buy more now to keep building. Tokens never expire and the smallest purchase is $5.");
     } else if (data.code === 'locked') {
       ccMode = false;
-      addMsg('ai', '> The Claude Code prompt unlocks with any token purchase. Open the menu and choose Buy tokens. Tokens never expire and the smallest purchase is $5.');
+      addBuyMsg('> The Claude Code prompt unlocks with any token purchase. Tokens never expire and the smallest purchase is $5.');
     } else {
       addMsg('ai', '> Signal lost. ' + (data.error || 'Retry transmission.'));
     }
@@ -1475,7 +1492,7 @@ Keep the prompt specific and complete but under about 1500 words. Plain text, no
 
 function startCC() {
   if (osEnabled() && osEverBought === false) {
-    addMsg('ai', '> The Claude Code prompt unlocks with any token purchase. Open the menu and choose Buy tokens. Tokens never expire and the smallest purchase is $5.');
+    addBuyMsg('> The Claude Code prompt unlocks with any token purchase. Tokens never expire and the smallest purchase is $5.');
     return;
   }
   ccMode = true; mpMode = false;
@@ -1564,7 +1581,7 @@ async function mpPlan(idea) {
     return;
   }
   if (d.code === 'short') {
-    addMsg('ai', '> Not enough tokens left for this build.\n\nIt needs about ' + fmtTok(d.need) + ' tokens reserved and you have ' + fmtTok(d.remaining) + ' left. Nothing was built and nothing was charged beyond the small planning step.' + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : ''));
+    addBuyMsg('> Not enough tokens left for this build.\n\nIt needs about ' + fmtTok(d.need) + ' tokens reserved and you have ' + fmtTok(d.remaining) + ' left. Nothing was built and nothing was charged beyond the small planning step.');
     mpMode = false;
     return;
   }
@@ -1651,10 +1668,10 @@ function mpVideoOpen() {
     try { d = await mpCall({ action: 'video_start', idea }); } catch (e) { d = { error: 'Connection interrupted. Try again.' }; }
     if (d.code === 'short') {
       div.remove();
-      addMsg('ai', '> Not enough tokens left for a video.\n\nIt needs about ' + fmtTok(d.need) + ' reserved and you have ' + fmtTok(d.remaining) + '.' + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : ''));
+      addBuyMsg('> Not enough tokens left for a video.\n\nIt needs about ' + fmtTok(d.need) + ' reserved and you have ' + fmtTok(d.remaining) + '.');
       return;
     }
-    if (!d.buildId) { btn.disabled = false; btn.textContent = 'GET QUOTE'; addMsg('ai', '> ' + (d.code === 'limit' ? "You're out of tokens." + (OS.checkoutUrl ? ' Open the menu and choose Buy tokens.' : '') : (d.error || 'Could not start. Try again.'))); return; }
+    if (!d.buildId) { btn.disabled = false; btn.textContent = 'GET QUOTE'; if (d.code === 'limit') addBuyMsg("> You're out of tokens."); else addMsg('ai', '> ' + (d.error || 'Could not start. Try again.')); return; }
     div.remove();
     mpOfferPlan(d);
   });
