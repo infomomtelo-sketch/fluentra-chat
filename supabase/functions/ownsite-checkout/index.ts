@@ -7,6 +7,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const SITE = "https://ownsite.app/";
+// The builder also runs at tello.live/build, so the buyer returns to the page they started from.
+const RETURN_PAGES = new Set(["https://ownsite.app/", "https://tello.live/build"]);
 const TOKENS_PER_DOLLAR = 50000;
 const MIN_DOLLARS = 5;
 const MAX_DOLLARS = 100;
@@ -39,8 +41,12 @@ Deno.serve(async (req) => {
   const uid = u.user.id;
   const email = u.user.email ?? "";
 
-  let dollars = 0;
-  try { dollars = Number((await req.json())?.dollars); } catch { /* fall through */ }
+  let dollars = 0, back = SITE;
+  try {
+    const b = await req.json();
+    dollars = Number(b?.dollars);
+    if (typeof b?.return_to === "string" && RETURN_PAGES.has(b.return_to)) back = b.return_to;
+  } catch { /* fall through */ }
   if (!Number.isInteger(dollars) || dollars < MIN_DOLLARS || dollars > MAX_DOLLARS) {
     return json({ error: `Choose a whole-dollar amount from $${MIN_DOLLARS} to $${MAX_DOLLARS}.`, code: "input" }, 400);
   }
@@ -55,8 +61,8 @@ Deno.serve(async (req) => {
   f.set("line_items[0][quantity]", "1");
   f.set("client_reference_id", uid);
   if (email) f.set("customer_email", email);
-  f.set("success_url", SITE + "?bought=1");
-  f.set("cancel_url", SITE);
+  f.set("success_url", back + "?bought=1");
+  f.set("cancel_url", back);
   f.set("metadata[app]", "ownsite");
   f.set("metadata[user_id]", uid);
   f.set("metadata[tokens]", String(tokens));
