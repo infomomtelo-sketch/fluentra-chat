@@ -1847,6 +1847,44 @@ if (TELLO && TELLO.fresh) {
   }, 900);
 }
 
+// ── TODAY WITH TELLO (tello.live/build only) ──────────────────
+// The free Tello chat greets the owner and shows today's briefing. The builder runs on tello.live, so it can read the
+// private link the Tello management page saved in this browser ('tello_owner') and ask the same /today endpoint.
+// Everything from the server is shown with textContent. No link saved: a short note on how to get one.
+function telloToday() {
+  if (!ON_TELLO) return;
+  const msgs = document.getElementById('messages');
+  if (!msgs) return;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('tello_owner') || 'null'); } catch (e) {}
+  const t = saved && typeof saved.t === 'string' && /^[a-f0-9]{20,64}$/.test(saved.t) ? saved.t : '';
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const box = document.createElement('div'); box.className = 'build-output';
+  const title = document.createElement('div'); title.className = 'build-title'; title.textContent = '◈ TODAY WITH TELLO';
+  const body = document.createElement('div'); body.className = 'acct-note'; body.style.cssText = 'white-space:normal;line-height:1.6';
+  const row = document.createElement('div'); row.className = 'build-actions';
+  box.appendChild(title); box.appendChild(body); box.appendChild(row); div.appendChild(box);
+  const link = (text, href) => { const a = document.createElement('a'); a.className = 'build-btn'; a.textContent = text; a.href = href; a.style.textDecoration = 'none'; row.appendChild(a); };
+  const add = (text) => { const p = document.createElement('p'); p.style.margin = '0 0 6px'; p.textContent = text; body.appendChild(p); };
+  const noLink = () => { body.textContent = ''; row.textContent = ''; add('Hi! I am Tello. Open your private Tello link once (it is in the email we sent you) and your daily briefing will show up here.'); link('EMAIL ME MY LINK', '/business#mylink'); };
+  msgs.appendChild(div);
+  if (!t) { noLink(); return; }
+  add('Loading your day...');
+  fetch('/api/biz/manage/today?t=' + encodeURIComponent(t))
+    .then(r => r.ok ? r.json() : Promise.reject(new Error('x')))
+    .then(d => {
+      if (!d || !Array.isArray(d.items)) throw new Error('x');
+      body.textContent = '';
+      const name = typeof saved.business === 'string' ? saved.business.slice(0, 80) : '';
+      add('Hi! Here is today' + (name ? ' for ' + name : '') + '.');
+      d.items.slice(0, 5).forEach(x => add(String(x).slice(0, 400)));
+      link('OPEN MY TELLO', '/business/manage?t=' + encodeURIComponent(t));
+    })
+    .catch(() => { try { localStorage.removeItem('tello_owner'); } catch (e) {} noLink(); });
+}
+telloToday();
+
 // ── OCEAN SOUND ENGINE ────────────────────────────────────────
 let audioCtx = null;
 let oceanNode = null;
