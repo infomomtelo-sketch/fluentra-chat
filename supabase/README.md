@@ -13,7 +13,7 @@
 Free: 30,000 tokens every month (used first). Bought tokens never expire. Rate: $20 per 1,000,000 tokens, $5 to $100 per purchase.
 1. Run `supabase/ownsite_credits.sql` in the nwlhs SQL editor (after `ownsite_usage.sql`).
 2. Deploy (replace) `ownsite-chat`, `ownsite-build`, `ownsite-checkout` (Verify JWT on) and `ownsite-stripe-webhook` (Verify JWT OFF).
-3. Stripe webhook `ownsite-wehook` only needs the event `checkout.session.completed`. Secrets: `OWNSITE_STRIPE_KEY` (Checkout Sessions: Write), `OWNSITE_STRIPE_WEBHOOK_SECRET`.
+3. Stripe webhook `ownsite-stripe-webhook` only needs the event `checkout.session.completed`. Secrets: `OWNSITE_STRIPE_KEY` (Checkout Sessions: Write), `OWNSITE_STRIPE_WEBHOOK_SECRET`.
 4. In `index.html` set `OS.checkoutUrl` to `https://nwlhsshvqmbhemhxcran.supabase.co/functions/v1/ownsite-checkout` (the Buy tokens menu item appears only when it is set).
 5. The old `ownsite-portal` function and the profiles.ownsite_pro columns are no longer used and can be deleted.
 The Claude Code prompt unlocks after any purchase (server-enforced in `ownsite-chat`, mode "handoff").
