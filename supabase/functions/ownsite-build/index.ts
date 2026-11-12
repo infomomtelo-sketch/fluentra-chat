@@ -9,6 +9,9 @@
 // than `reserved` (125% of the quote); only pages that were actually delivered are charged;
 // anything beyond the reserve is absorbed by us.
 // Secrets: ANTHROPIC_API_KEY (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are built in)
+// NOTE: AI calls go through SecondRail (secondrail.tello.live) so a dead provider
+// key fails over instead of killing the builder. ANTHROPIC_API_KEY here holds the
+// SecondRail customer ID (cust_bkj0zxhx), not a provider key.
 // Tables: ownsite_builds, ownsite_credits (see supabase/ownsite_builds.sql and ownsite_credits.sql)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
@@ -98,7 +101,7 @@ const usageOf = (used: number, credits: number) => ({ used, limit: FREE_LIMIT, p
 async function claude(system: string, user: string, maxTokens: number) {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) return { error: "Server is missing ANTHROPIC_API_KEY.", code: "server" } as const;
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fetch("https://secondrail.tello.live/v1/messages", {
     method: "POST",
     headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] }),
